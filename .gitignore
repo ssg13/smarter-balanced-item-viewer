@@ -14,5 +14,9 @@ server.pid
 /dist/
 .cache
 #Ignore user specific Intellij files
-source/.idea/workspace.xml
-source/.idea/tasks.xml
+*/.idea/workspace.xml
+*/.idea/tasks.xml
+.idea/workspace.xml
+.idea/tasks.xml
+#Ignore Maven target
+*/target/*
