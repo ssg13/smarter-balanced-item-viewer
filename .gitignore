@@ -13,3 +13,10 @@ server.pid
 *.eml
 /dist/
 .cache
+#Ignore user specific Intellij files
+*/.idea/workspace.xml
+*/.idea/tasks.xml
+.idea/workspace.xml
+.idea/tasks.xml
+#Ignore Maven target
+*/target/*
