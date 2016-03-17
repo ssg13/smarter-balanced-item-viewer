@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class ExampleController {
 
-    @RequestMapping("/example")
-        public String example(Model model) {
-            model.addAttribute("attributeName", "Attribute Value");
-            return "example";
-    }
+  @RequestMapping("/example")
+  public String example(Model model) {
+    model.addAttribute("attributeName", "Attribute Value");
+    return "example";
+  }
 
 }

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/source/itemviewerservice.iml" filepath="$PROJECT_DIR$/source/itemviewerservice.iml" />
+      <module fileurl="file://$PROJECT_DIR$/source/ItemViewerService.iml" filepath="$PROJECT_DIR$/source/ItemViewerService.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/smarter-balanced-item-viewer.iml" filepath="$PROJECT_DIR$/.idea/smarter-balanced-item-viewer.iml" />
     </modules>
   </component>
