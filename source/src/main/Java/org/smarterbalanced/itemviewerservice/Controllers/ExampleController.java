@@ -1,16 +1,18 @@
 package org.smarterbalanced.itemviewerservice.Controllers;
 
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
+@EnableAutoConfiguration
 public class ExampleController {
 
-  @RequestMapping("/example")
-  public String example(Model model) {
-    model.addAttribute("attributeName", "Attribute Value");
-    return "example";
+  @RequestMapping("/")
+  @ResponseBody
+  String home() {
+    return "Hello World!";
   }
 
 }
