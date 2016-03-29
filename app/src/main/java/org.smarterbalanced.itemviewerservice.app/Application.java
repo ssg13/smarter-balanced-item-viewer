@@ -1,4 +1,4 @@
-package org.smarterbalanced.itemviewerservice;
+package org.smarterbalanced.itemviewerservice.app;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
