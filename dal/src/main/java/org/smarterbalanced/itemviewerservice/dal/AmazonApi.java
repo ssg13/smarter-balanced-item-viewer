@@ -26,6 +26,7 @@ public class AmazonApi {
     public ObjectListing objectsList() {
         ObjectListing objectListing = null;
         try {
+            //TODO: request more objects if the first listObjects call does not return the full list
             objectListing = s3connection.listObjects(new ListObjectsRequest()
                     .withBucketName(this.bucketName));
 
