@@ -21,5 +21,13 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- Amazon api sdk -->
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-s3</artifactId>
+      <version>1.10.65</version>
+    </dependency>
+
   </dependencies>
 </project>
