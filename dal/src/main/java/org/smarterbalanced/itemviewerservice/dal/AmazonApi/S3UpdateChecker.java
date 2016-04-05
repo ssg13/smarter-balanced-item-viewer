@@ -1,12 +1,12 @@
-package org.smarterbalanced.itemviewerservice.dal;
+package org.smarterbalanced.itemviewerservice.dal.AmazonApi;
 
 
-import com.amazonaws.AmazonClientException;
+
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
@@ -30,7 +30,7 @@ public class S3UpdateChecker extends Thread {
   private String queueUrl;
   private AmazonSQS sqs;
 
-  S3UpdateChecker(String queueUrl) {
+  public S3UpdateChecker(String queueUrl) {
     AWSCredentials credentials;
     this.queueUrl = queueUrl;
     try {
