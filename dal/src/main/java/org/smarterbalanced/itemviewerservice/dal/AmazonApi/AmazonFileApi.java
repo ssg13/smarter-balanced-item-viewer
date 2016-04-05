@@ -1,4 +1,4 @@
-package org.smarterbalanced.itemviewerservice.dal;
+package org.smarterbalanced.itemviewerservice.dal.AmazonApi;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -9,16 +9,18 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.iterable.S3Objects;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
-import static java.lang.Math.toIntExact;
+
+import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import static java.lang.Math.toIntExact;
 
-public class AmazonApi {
+public class AmazonFileApi {
   private String bucketName;
   private AmazonS3 s3connection;
 
-  public AmazonApi(String bucketName) {
+  public AmazonFileApi(String bucketName) {
     this.bucketName = bucketName;
     this.s3connection = new AmazonS3Client();
     Region usWest2 = Region.getRegion(Regions.US_WEST_2);

@@ -27,20 +27,20 @@ import java.util.Map.Entry;
 
 
 public class S3UpdateChecker extends Thread {
-  private AWSCredentials credentials;
   private String queueUrl;
   private AmazonSQS sqs;
 
   S3UpdateChecker(String queueUrl) {
+    AWSCredentials credentials;
     this.queueUrl = queueUrl;
     try {
-      this.credentials = new ProfileCredentialsProvider().getCredentials();
+      credentials = new ProfileCredentialsProvider().getCredentials();
     } catch (Exception e) {
       System.err.println("ERROR: Unable to load Amazon credentials. This will prevent connection to the Amazon API.");
       Thread.currentThread().interrupt();
       return;
     }
-    this.sqs = new AmazonSQSClient(this.credentials);
+    this.sqs = new AmazonSQSClient(credentials);
   }
 
   private List<Message> pollForUpdates() {
@@ -69,11 +69,18 @@ public class S3UpdateChecker extends Thread {
     }
   }
 
+  public void updateRedisIndex() {
+    /*TODO: Once Redis is implemented, use this to sync S3 file uploads/deletions with Redis
+    If a new file is added to S3 check if it is in the Redis cache. If not add it, else ignore.
+    If a file is removed from S3 check if it is in the Redis cache. If  not, ignore, else delete it.
+     */
+  }
+
   public void run() {
     int sleepTime = 4000; //4 seconds
     while (true) {
       List<Message> messages = pollForUpdates();
-      //TODO: replace with using messages to update index
+      //TODO: Replace for loop with updateRedisIndex method once implemented
       for (Message message : messages) {
         System.out.println("Message Body: " + message.getBody());
         for (Entry<String, String> entry : message.getAttributes().entrySet()) {

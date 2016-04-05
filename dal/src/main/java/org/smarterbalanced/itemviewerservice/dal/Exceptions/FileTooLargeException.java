@@ -1,4 +1,4 @@
-package org.smarterbalanced.itemviewerservice.dal;
+package org.smarterbalanced.itemviewerservice.dal.Exceptions;
 //custom exception for files too large to fetch from Amazon api into memory.
 
 public class FileTooLargeException extends Exception {
