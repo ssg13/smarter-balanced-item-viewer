@@ -5,11 +5,6 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map.Entry;
-
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
@@ -25,16 +20,25 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 
-public class S3UpdateChecker extends Thread {
-  AWSCredentials credentials;
-  String queueUrl;
-  AmazonSQS sqs;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map.Entry;
 
-  S3UpdateChecker() {
+
+
+public class S3UpdateChecker extends Thread {
+  private AWSCredentials credentials;
+  private String queueUrl;
+  private AmazonSQS sqs;
+
+  S3UpdateChecker(String queueUrl) {
+    this.queueUrl = queueUrl;
     try {
       this.credentials = new ProfileCredentialsProvider().getCredentials();
     } catch (Exception e) {
-      throw new AmazonClientException("Unable to load Amazon credentials");
+      System.err.println("ERROR: Unable to load Amazon credentials. This will prevent connection to the Amazon API.");
+      Thread.currentThread().interrupt();
+      return;
     }
     this.sqs = new AmazonSQSClient(this.credentials);
   }
@@ -44,20 +48,33 @@ public class S3UpdateChecker extends Thread {
     try{
       ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(this.queueUrl);
       messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
-    } catch (Exception e) {
-      //handle exception
-      System.err.format("ERROR: unable to fetch messages from Amazon. Reason: %s", e.getMessage());
+    } catch (AmazonServiceException aex) {
+      System.err.format("ERROR: Amazon rejected message get request. Reason: %s%n", aex.getErrorMessage());
+    } catch (AmazonClientException aex) {
+      System.err.format("ERROR: Unable to communicate with the Amazon API. Reason: %s%n", aex.getMessage());
     }
     return messages;
   }
 
+  private void removeFromQueue(List<Message> messages) {
+    for (Message message : messages) {
+      String receipt = message.getReceiptHandle();
+      try {
+        sqs.deleteMessage(new DeleteMessageRequest(this.queueUrl, receipt));
+      } catch (AmazonServiceException aex) {
+        System.err.format("ERROR: Amazon denied the request to delete the message. Reason: %s%n", aex.getErrorMessage());
+      } catch (AmazonClientException aex) {
+        System.err.format("ERROR: Unable to communicate with the Amazon API. Reason: %s%n", aex.getMessage());
+      }
+    }
+  }
+
   public void run() {
-    List<Message> messages = Collections.emptyList();
     int sleepTime = 4000; //4 seconds
-    while(true) {
-      messages = pollForUpdates();
+    while (true) {
+      List<Message> messages = pollForUpdates();
       //TODO: replace with using messages to update index
-      for(Message message : messages) {
+      for (Message message : messages) {
         System.out.println("Message Body: " + message.getBody());
         for (Entry<String, String> entry : message.getAttributes().entrySet()) {
           System.out.println("Message Attribute");
@@ -65,16 +82,15 @@ public class S3UpdateChecker extends Thread {
           System.out.println("Value: " + entry.getValue());
         }
       }
+      removeFromQueue(messages);
       try {
         Thread.sleep(sleepTime);
-      } catch (Exception e) {
-
+      } catch (InterruptedException e) {
+        //The thread was interrupted and should exit
+        Thread.currentThread().interrupt();
+        return;
       }
     }
-  }
-
-  public static void main(String args[]) {
-    (new S3UpdateChecker()).start();
   }
 
 }
