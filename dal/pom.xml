@@ -12,6 +12,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Checkstyle configuration -->
+    <checkstyle.config.location>google_checks.xml</checkstyle.config.location>
+    <checkstyle.violationSeverity>info</checkstyle.violationSeverity>
+    <checkstyle.violation.ignore>PackageName</checkstyle.violation.ignore>
   </properties>
 
   <dependencies>
