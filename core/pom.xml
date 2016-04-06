@@ -23,11 +23,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Checkstyle -->
-    <dependency>
-      <groupId>com.puppycrawl.tools</groupId>
-      <artifactId>checkstyle</artifactId>
-      <version>6.17</version>
-    </dependency>
   </dependencies>
+
 </project>
