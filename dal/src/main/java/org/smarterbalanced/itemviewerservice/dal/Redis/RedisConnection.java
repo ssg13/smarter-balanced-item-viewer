@@ -1,9 +1,9 @@
 package org.smarterbalanced.itemviewerservice.dal.Redis;
 
+import org.smarterbalanced.itemviewerservice.dal.Exceptions.RedisFileException;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-
-import java.nio.charset.Charset;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class RedisConnection {
   private JedisPool pool;
@@ -12,56 +12,80 @@ public class RedisConnection {
     this.pool = pool;
   }
 
-  public void storeFile(byte[] key, byte[] fileData) {
-    Jedis jedis = null;
-    String result = null;
+  public void storeFile(String key, byte[] fileData) throws RedisFileException {
+    Jedis jedis;
+    String result;
+    byte[] byteKey = key.getBytes();
+
     try {
       jedis = this.pool.getResource();
-      result = jedis.set(key, fileData);
-    } catch (Exception e) {
-      System.err.println("ERROR: Failed to get a Redis connection while setting.");
-    } finally {
-      if (jedis != null) {
-        jedis.close();
-      }
+      result = jedis.set(byteKey, fileData);
+    } catch (JedisConnectionException e) {
+      System.err.println("ERROR: Failed to get a Redis connection from pool.");
+      throw e;
     }
+
+    jedis.close();
+
     if (!result.equals("OK")) {
       System.err.println("ERROR: Failed to store file. Reason " + result);
+      throw new RedisFileException(String.format("Failed to store file with key: %s. Reason: %s", key, result));
     }
   }
 
-  public byte[] getFile(byte[] key) {
-    byte[] fileContents = null;
-    Jedis jedis = null;
-    String result = null;
+  public byte[] getByteFile(String key) throws RedisFileException {
+    byte[] fileContents;
+    Jedis jedis;
+    boolean exists;
+    byte[] byteKey = key.getBytes();
+
     try {
       jedis = this.pool.getResource();
-      fileContents = jedis.get(key);
-    } catch (Exception e) {
-      System.err.println("ERROR: Failed to get a Redis connection while getting.");
-    } finally {
-      if (jedis != null) {
-        jedis.close();
+
+      exists = jedis.exists(key);
+      if(exists) {
+        fileContents = jedis.get(byteKey);
       }
+      else {
+        System.err.println(String.format("File with key %s not in Redis.", key));
+        throw new RedisFileException(String.format("File with key: %s is not in Redis.", key));
+      }
+
+    } catch (JedisConnectionException e) {
+      System.err.println("ERROR: Failed to get a Redis connection from connection pool. Reason: " + e.getMessage());
+      throw e;
     }
+
+    jedis.close();
+
     return fileContents;
   }
 
-  public void removeFile(String key) {
-    Jedis jedis = null;
+  public void removeFile(String key) throws RedisFileException {
+    Jedis jedis;
     Long result = 0L;
+    boolean exists;
+
     try {
       jedis = this.pool.getResource();
-      result = jedis.del(key);
-    } catch (Exception e) {
-      System.err.println("ERROR: Failed to get a Redis connection while deleting.");
-    } finally {
-      if (jedis != null) {
-        jedis.close();
+      exists = jedis.exists(key);
+      if(exists) {
+        result = jedis.del(key);
       }
+      else {
+        System.err.println(String.format("File with key: %s not in Redis", key));
+      }
+
+    } catch (JedisConnectionException e) {
+      System.err.println("ERROR: Failed to connect to Redis. Reason " + e.getMessage());
+      throw e;
     }
+
+    jedis.close();
+
     if (result != 1L) {
-      System.err.println("ERROR: Failed to get delete object.");
+      System.err.println(String.format("ERROR: Failed to delete object with key: %s", key));
+      throw new RedisFileException(String.format("Failed to delete file with key: %s", key));
     }
   }
 }

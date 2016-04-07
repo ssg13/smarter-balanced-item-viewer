@@ -19,11 +19,10 @@ public class App {
     String fileString;
     byte[] redisResult;
     String key = "bar";
-    byte[] byteKey = key.getBytes();
-    String redisStringResult;
+    String redisStringResult = "";
 
     try {
-      fileArray = Files.readAllBytes(new File("/path/file").toPath());
+      fileArray = Files.readAllBytes(new File("path").toPath());
     } catch (IOException e) {
       System.err.println("Failed to open file: " + e.getMessage());
       System.exit(1);
@@ -36,12 +35,26 @@ public class App {
     JedisPool pool = new JedisPool(new JedisPoolConfig(), "localhost");
     RedisConnection redis = new RedisConnection(pool);
 
-    redis.storeFile(byteKey, fileArray);
+    try{
+      redis.storeFile(key, fileArray);
+    } catch (Exception e) {
+      System.err.println("Failed to store file");
+    }
 
-    redisResult = redis.getFile(byteKey);
-    redisStringResult = new String(redisResult);
+    try {
+      redisResult = redis.getByteFile(key);
+      redisStringResult = new String(redisResult);
+    } catch (Exception e) {
+      System.err.println("Failed to get file");
+    }
 
     System.out.println("After storing: " + redisStringResult);
+
+    try {
+      redis.removeFile("baz");
+    } catch (Exception e) {
+      System.err.println("Failed to delete");
+    }
 
     pool.destroy();
   }
