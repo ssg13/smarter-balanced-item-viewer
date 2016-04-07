@@ -1,15 +1,10 @@
 package org.smarterbalanced.itemviewerservice.dal.AmazonApi;
 
-
-
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
@@ -24,51 +19,69 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 
-
-
 public class S3UpdateChecker extends Thread {
   private String queueUrl;
   private AmazonSQS sqs;
 
+  /**
+   * Creates a new instance of the S3UpdateChecker class.
+   * @param queueUrl URL of AWS Message Queue to watch
+   */
   public S3UpdateChecker(String queueUrl) {
     AWSCredentials credentials;
     this.queueUrl = queueUrl;
     try {
       credentials = new ProfileCredentialsProvider().getCredentials();
     } catch (Exception e) {
-      System.err.println("ERROR: Unable to load Amazon credentials. This will prevent connection to the Amazon API.");
+      System.err.println("ERROR: Unable to load Amazon credentials. "
+          + "This will prevent connection to the Amazon API.");
       Thread.currentThread().interrupt();
       return;
     }
     this.sqs = new AmazonSQSClient(credentials);
   }
 
+  /**
+   * Performs a GET request to AWS Message Queue.
+   * @return Updates from the Message Queue
+   */
   private List<Message> pollForUpdates() {
     List<Message> messages = Collections.emptyList();
-    try{
+    try {
       ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(this.queueUrl);
       messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
     } catch (AmazonServiceException aex) {
-      System.err.format("ERROR: Amazon rejected message get request. Reason: %s%n", aex.getErrorMessage());
+      System.err.format("ERROR: Amazon rejected message get request. "
+          + "Reason: %s%n", aex.getErrorMessage());
     } catch (AmazonClientException aex) {
-      System.err.format("ERROR: Unable to communicate with the Amazon API. Reason: %s%n", aex.getMessage());
+      System.err.format("ERROR: Unable to communicate with the Amazon API. "
+          + "Reason: %s%n", aex.getMessage());
     }
     return messages;
   }
 
+  /**
+   * Performs a DELETE request to AWS Message Queue.
+   * @param messages A list of messages to delete from the queue
+   */
   private void removeFromQueue(List<Message> messages) {
     for (Message message : messages) {
       String receipt = message.getReceiptHandle();
       try {
         sqs.deleteMessage(new DeleteMessageRequest(this.queueUrl, receipt));
       } catch (AmazonServiceException aex) {
-        System.err.format("ERROR: Amazon denied the request to delete the message. Reason: %s%n", aex.getErrorMessage());
+        System.err.format("ERROR: Amazon denied the request to delete the message. "
+            + "Reason: %s%n", aex.getErrorMessage());
       } catch (AmazonClientException aex) {
-        System.err.format("ERROR: Unable to communicate with the Amazon API. Reason: %s%n", aex.getMessage());
+        System.err.format("ERROR: Unable to communicate with the Amazon API. "
+            + "Reason: %s%n", aex.getMessage());
       }
     }
   }
 
+  /**
+   * Syncs changes in S3 with Redis cache.
+   */
   public void updateRedisIndex() {
     /*TODO: Once Redis is implemented, use this to sync S3 file uploads/deletions with Redis
     If a new file is added to S3 check if it is in the Redis cache. If not add it, else ignore.
@@ -76,6 +89,9 @@ public class S3UpdateChecker extends Thread {
      */
   }
 
+  /**
+   * Periodically polls S3 for changes and triggers Redis updates when necessary.
+   */
   public void run() {
     int sleepTime = 4000; //4 seconds
     while (true) {

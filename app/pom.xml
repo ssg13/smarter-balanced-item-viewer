@@ -18,11 +18,22 @@
 
   <!-- Version variables -->
   <properties>
-    <!--Default to UTF-8 encoding -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Checkstyle configuration -->
+    <checkstyle.config.location>google_checks.xml</checkstyle.config.location>
+    <checkstyle.violationSeverity>info</checkstyle.violationSeverity>
+    <checkstyle.violation.ignore>PackageName</checkstyle.violation.ignore>
   </properties>
 
   <dependencies>
+    <!-- JUnit-->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+
     <!-- Spring Boot -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
