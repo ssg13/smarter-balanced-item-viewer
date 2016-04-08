@@ -99,12 +99,12 @@ public class RedisConnection {
   }
 
   /**
-   * Remove the file matching the given key from Redis. If the file does not exist an error is logged.
+   * Remove the file matching the given key from Redis. If the file does not exist an error is logged and a RedisFileException is thrown.
    * If the file exists and is not deleted an error is logged and a RedisFileException is thrown.
    *
    * @param key the key for the object to delete from Redis.
    *            If the key is invalid nothing will be deleted.
-   * @throws RedisFileException if the object exists in Redis but is not deleted.
+   * @throws RedisFileException if the object is not deleted.
    * @throws JedisConnectionException if the Redis connection attempt fails.
    */
   public void removeFile(String key) throws RedisFileException, JedisConnectionException {
