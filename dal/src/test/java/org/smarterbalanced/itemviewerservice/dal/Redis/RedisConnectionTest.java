@@ -1,6 +1,5 @@
 package org.smarterbalanced.itemviewerservice.dal.Redis;
 
-import com.amazonaws.services.dynamodbv2.xspec.S;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,7 +15,6 @@ import static org.junit.Assert.assertTrue;
 
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.RedisFileException;
-import org.smarterbalanced.itemviewerservice.dal.Redis.RedisConnection;
 
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -24,7 +22,7 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.Random;
+
 
 public class RedisConnectionTest {
 
@@ -40,24 +38,31 @@ public class RedisConnectionTest {
     byte[] testData =  "Some Test String".getBytes();
 
     try{
-      this.redis.storeFile(key, testData);
+      this.redis.storeByteFile(key, testData);
     } catch(Exception e) {
       assertTrue("Failed pre test setup. Please make sure Redis is running.", false);
     }
   }
 
   @Test
-  public void storeGoodFileTest() throws RedisFileException, FileTooLargeException, JedisConnectionException {
-    final String key = "goodTestKey";
+  public void storeGoodByteFileTest() throws RedisFileException, FileTooLargeException, JedisConnectionException {
+    final String key = "goodByteTestKey";
     final byte[] goodTestData = "Donec quis viverra justo. Vivamus dignissim euismod ornare. Fusce ante elit, euismod eu ligula id, tempus vehicula metus. Integer consectetur ornare mollis. Ut pharetra erat at elit dapibus, vel ultrices sapien maximus. Maecenas nec felis blandit dui volutpat volutpat. Donec massa erat, porttitor et fringilla eu, laoreet vitae justo. Sed quis urna malesuada, pharetra justo nec, posuere lacus. Suspendisse quis aliquam est. Praesent pellentesque, ipsum sed aliquet eleifend, est nulla orci aliquam.".getBytes();
-    this.redis.storeFile(key, goodTestData);
+    this.redis.storeByteFile(key, goodTestData);
   }
 
   @Test(expected = FileTooLargeException.class)
-  public void storeBadFileTest() throws RedisFileException, JedisConnectionException, FileTooLargeException {
+  public void storeBadByteFileTest() throws RedisFileException, JedisConnectionException, FileTooLargeException {
     final String key = "badTestKey";
     byte[] badTestData = new byte[1000000000];
-    this.redis.storeFile(key, badTestData);
+    this.redis.storeByteFile(key, badTestData);
+  }
+
+  @Test
+  public void storeGoodStringFileTest() throws RedisFileException, FileTooLargeException, JedisConnectionException {
+    final String key = "goodStringTestKey";
+    final String goodTestString = "This is a valid test string.";
+    this.redis.storeTextFile(key, goodTestString);
   }
 
   @Test(expected = RedisFileException.class)

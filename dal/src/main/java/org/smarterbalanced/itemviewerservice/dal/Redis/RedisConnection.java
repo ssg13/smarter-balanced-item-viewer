@@ -33,7 +33,7 @@ public class RedisConnection {
    * @throws JedisConnectionException if the Redis connection attempt fails.
    * @throws FileTooLargeException if the file is larger than 512 MB.
    */
-  public void storeFile(String key, byte[] fileData) throws RedisFileException,
+  public void storeByteFile(String key, byte[] fileData) throws RedisFileException,
           JedisConnectionException, FileTooLargeException {
     final int maxFileSize = 512000000; //512 MB
     Jedis jedis;
@@ -53,6 +53,42 @@ public class RedisConnection {
     }
 
     jedis.close();
+
+    if (!result.equals("OK")) {
+      System.err.println("ERROR: Failed to store file. Reason " + result);
+      throw new RedisFileException(String.format("Failed to store file with key: %s. Reason: %s", key, result));
+    }
+  }
+
+
+  /**
+   * Store text file.
+   *
+   * @param key      The key used to store the data in Redis.
+   *                 If the key is already in Redis the data associated with it will be overwritten.
+   * @param fileData The data to store in Redis. Maximum file soze of 512 MB.
+   * @throws RedisFileException       if unable to store the file.
+   * @throws JedisConnectionException if the Redis connection attempt fails.
+   * @throws FileTooLargeException    if the file is larger than 512 MB.
+   */
+  public void storeTextFile(String key, String fileData) throws RedisFileException,
+          JedisConnectionException, FileTooLargeException {
+    final int maxFileSize = 512000000; //512 MB
+    int size = fileData.getBytes().length;
+    Jedis jedis;
+    String result;
+
+    if (size > maxFileSize) {
+      throw new FileTooLargeException(String.format("File with key %s is larger than 512 MB", key));
+    }
+
+    try {
+      jedis = this.pool.getResource();
+      result = jedis.set(key, fileData);
+    } catch (JedisConnectionException e) {
+      System.err.println("ERROR: Failed to get a Redis connection from pool.");
+      throw e;
+    }
 
     if (!result.equals("OK")) {
       System.err.println("ERROR: Failed to store file. Reason " + result);

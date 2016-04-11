@@ -1,6 +1,5 @@
 package org.smarterbalanced.itemviewerservice.dal;
 
-import org.smarterbalanced.itemviewerservice.dal.AmazonApi.S3UpdateChecker;
 import org.smarterbalanced.itemviewerservice.dal.Redis.RedisConnection;
 
 import redis.clients.jedis.JedisPool;
@@ -36,7 +35,7 @@ public class App {
     RedisConnection redis = new RedisConnection(pool);
 
     try{
-      redis.storeFile(key, fileArray);
+      redis.storeByteFile(key, fileArray);
     } catch (Exception e) {
       System.err.println("Failed to store file");
     }
