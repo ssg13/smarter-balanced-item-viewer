@@ -14,8 +14,9 @@ public class RedisConnection {
   private JedisPool pool;
 
   /**
-   * Instantiates a new Redis connection object that will use the given connection pool to connect to Redis.
-   * Connections are checked out of the pool when a method is called and returned on error or completion.
+   * Instantiates a new Redis connection object that will use the given connection pool
+   * to connect to Redis. Connections are checked out of the pool when a method is called
+   * and returned on error or completion.
    *
    * @param pool a pool of Jedis connections the object will use to connect to Redis.
    */
@@ -56,7 +57,8 @@ public class RedisConnection {
 
     if (!result.equals("OK")) {
       System.err.println("ERROR: Failed to store file. Reason " + result);
-      throw new RedisFileException(String.format("Failed to store file with key: %s. Reason: %s", key, result));
+      throw new RedisFileException(String.format("Failed to store file with key: %s. "
+              + "Reason: %s", key, result));
     }
   }
 
@@ -92,7 +94,8 @@ public class RedisConnection {
 
     if (!result.equals("OK")) {
       System.err.println("ERROR: Failed to store file. Reason " + result);
-      throw new RedisFileException(String.format("Failed to store file with key: %s. Reason: %s", key, result));
+      throw new RedisFileException(String.format("Failed to store file with key: %s. "
+              + "Reason: %s", key, result));
     }
   }
 
@@ -116,16 +119,16 @@ public class RedisConnection {
       jedis = this.pool.getResource();
 
       exists = jedis.exists(key);
-      if(exists) {
+      if (exists) {
         fileContents = jedis.get(byteKey);
-      }
-      else {
+      } else {
         System.err.println(String.format("File with key %s not in Redis.", key));
         throw new RedisFileException(String.format("File with key: %s is not in Redis.", key));
       }
 
     } catch (JedisConnectionException e) {
-      System.err.println("ERROR: Failed to get a Redis connection from connection pool. Reason: " + e.getMessage());
+      System.err.println("ERROR: Failed to get a Redis connection from connection pool. "
+              + "Reason: " + e.getMessage());
       throw e;
     }
 
@@ -135,7 +138,8 @@ public class RedisConnection {
   }
 
   /**
-   * Remove the file matching the given key from Redis. If the file does not exist an error is logged and a RedisFileException is thrown.
+   * Remove the file matching the given key from Redis. If the file does not exist an error is
+   * logged and a RedisFileException is thrown.
    * If the file exists and is not deleted an error is logged and a RedisFileException is thrown.
    *
    * @param key the key for the object to delete from Redis.
@@ -151,10 +155,9 @@ public class RedisConnection {
     try {
       jedis = this.pool.getResource();
       exists = jedis.exists(key);
-      if(exists) {
+      if (exists) {
         result = jedis.del(key);
-      }
-      else {
+      } else {
         System.err.println(String.format("File with key: %s not in Redis", key));
       }
 
