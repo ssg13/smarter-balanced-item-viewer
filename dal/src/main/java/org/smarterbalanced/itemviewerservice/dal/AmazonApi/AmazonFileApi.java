@@ -8,7 +8,12 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.iterable.S3Objects;
-import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.util.IOUtils;
 
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
@@ -42,6 +47,10 @@ public class AmazonFileApi {
     return object;
   }
 
+  /**
+   * Lists all objects in the S3 .
+   * @return List of all objects in the S3 bucket
+   */
   public List<String> getAllKeys() {
     List<String> keys = new ArrayList<String>();
 
@@ -79,13 +88,15 @@ public class AmazonFileApi {
    * @throws IOException Throws for connection errors with S3
    * @throws NullPointerException Throws when file pointer fails to initialize
    */
-  public byte[] getS3File(String key) throws FileTooLargeException, IOException, NullPointerException {
+  public byte[] getS3File(String key)
+          throws FileTooLargeException, IOException, NullPointerException {
     byte[] fileData;
     S3Object object = getObject(key);
     ObjectMetadata objectMetadata = object.getObjectMetadata();
     long awsFileSize = objectMetadata.getContentLength();
-    if(awsFileSize > Integer.MAX_VALUE){
-      throw new FileTooLargeException("File is over 2 GB. This is too large to hold in memory as a byte array.");
+    if (awsFileSize > Integer.MAX_VALUE) {
+      throw new FileTooLargeException("File is over 2 GB. "
+              + "This is too large to hold in memory as a byte array.");
     }
 
     try {
@@ -102,6 +113,12 @@ public class AmazonFileApi {
     return fileData;
   }
 
+  /**
+   * Gets a file stream from an object in a S3 bucket.
+   * @param key The name of the object to download
+   * @return InputStream object representing a file stream of an S3 object
+   * @throws NullPointerException Throws if fileStream cannot be initialized
+     */
   public InputStream getS3FileStream(String key) throws NullPointerException {
     InputStream objectFileStream;
     S3Object object = getObject(key);
@@ -111,7 +128,7 @@ public class AmazonFileApi {
       System.err.println("Amazon S3 file stream is null");
       throw ex;
     }
-    if(objectFileStream == null) {
+    if (objectFileStream == null) {
       throw new NullPointerException("");
     }
     return objectFileStream;
