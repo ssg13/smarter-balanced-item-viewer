@@ -1,9 +1,8 @@
 package org.smarterbalanced.itemviewerservice.dal.AmazonApi;
 
-import static java.lang.Math.toIntExact;
-
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
@@ -18,6 +17,8 @@ import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeExceptio
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AmazonFileApi {
   private String bucketName;
@@ -43,9 +44,33 @@ public class AmazonFileApi {
     return object;
   }
 
-  public S3Objects listObjects() {
-    S3Objects objectList = S3Objects.withPrefix(this.s3connection, this.bucketName, "/");
-    return objectList;
+  public List<String> getAllKeys() {
+    List<String> keys = new ArrayList<String>();
+
+    try {
+      ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+              .withBucketName(this.bucketName);
+      ObjectListing objectListing;
+      do {
+        objectListing = s3connection.listObjects(listObjectsRequest);
+        for (S3ObjectSummary objectSummary :
+                objectListing.getObjectSummaries()) {
+          keys.add(objectSummary.getKey());
+        }
+        listObjectsRequest.setMarker(objectListing.getNextMarker());
+      } while (objectListing.isTruncated());
+    } catch (AmazonServiceException ase) {
+      System.err.println("ERROR: Amazon rejected the connection to S3.");
+      System.err.println("Error Message:    " + ase.getMessage());
+      System.err.println("HTTP Status Code: " + ase.getStatusCode());
+      System.err.println("AWS Error Code:   " + ase.getErrorCode());
+      System.err.println("Error Type:       " + ase.getErrorType());
+      System.err.println("Request ID:       " + ase.getRequestId());
+    } catch (AmazonClientException ace) {
+      System.err.println("ERROR: Network error connecting to Amazon S3.");
+      System.err.println("Error Message: " + ace.getMessage());
+    }
+    return keys;
   }
 
   /**
@@ -58,30 +83,41 @@ public class AmazonFileApi {
    */
   public byte[] getFile(S3Object object)
       throws FileTooLargeException, IOException, NullPointerException {
+    byte[] fileData;
+    S3Object object = getObject(key);
     ObjectMetadata objectMetadata = object.getObjectMetadata();
     long awsFileSize = objectMetadata.getContentLength();
-    int fileSize;
-    try {
-      fileSize = toIntExact(awsFileSize);
-    } catch (ArithmeticException e) {
-      //in this case the file size is > INT MAX. Or greater than ~2 GB.
-      throw new FileTooLargeException("File is over 2 GB", e);
+    if(awsFileSize > Integer.MAX_VALUE){
+      throw new FileTooLargeException("File is over 2 GB. This is too large to hold in memory as a byte array.");
     }
 
-    byte[] fileData = new byte[fileSize];
     try {
       InputStream objectFileStream = object.getObjectContent();
       fileData = IOUtils.toByteArray(objectFileStream);
       objectFileStream.close();
     } catch (IOException ex) {
-      //occurs in case of IO errors
-      //TODO: handle exception
+      System.err.println("Failed to open file stream with Amazon S3.");
       throw ex;
     } catch (NullPointerException ex) {
-      //occurs the case that the file stream fails to init.
-      //TODO: handle exception
+      System.err.println("Amazon S3 file stream is null");
       throw ex;
     }
     return fileData;
   }
+
+  public InputStream getS3FileStream(String key) throws NullPointerException {
+    InputStream objectFileStream;
+    S3Object object = getObject(key);
+    try {
+      objectFileStream = object.getObjectContent();
+    } catch (NullPointerException ex) {
+      System.err.println("Amazon S3 file stream is null");
+      throw ex;
+    }
+    if(objectFileStream == null) {
+      throw new NullPointerException("");
+    }
+    return objectFileStream;
+  }
+
 }
