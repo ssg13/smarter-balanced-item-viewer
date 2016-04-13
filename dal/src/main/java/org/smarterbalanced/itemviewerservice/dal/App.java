@@ -6,7 +6,15 @@ public class App {
 
   public static void main( String[] args ) {
     System.out.println( "Hello World!" );
-    (new S3UpdateChecker("url")).start();
+    String url = "";
+    S3UpdateChecker checker = new S3UpdateChecker(url);
+    checker.start();
+    try{
+      checker.join();
+    } catch (Exception e) {
+      System.exit(1);
+    }
+
   }
 
 }

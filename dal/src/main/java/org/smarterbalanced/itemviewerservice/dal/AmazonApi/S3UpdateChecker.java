@@ -5,6 +5,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
@@ -21,7 +22,7 @@ import java.util.Map.Entry;
 
 public class S3UpdateChecker extends Thread {
   private String queueUrl;
-  private AmazonSQS sqs;
+  private AmazonSQSClient sqs;
 
   /**
    * Creates a new instance of the S3UpdateChecker class.
@@ -30,6 +31,7 @@ public class S3UpdateChecker extends Thread {
   public S3UpdateChecker(String queueUrl) {
     AWSCredentials credentials;
     this.queueUrl = queueUrl;
+    Region usWest2 = Region.getRegion(Regions.US_WEST_2);
     try {
       credentials = new ProfileCredentialsProvider().getCredentials();
     } catch (Exception e) {
@@ -39,6 +41,7 @@ public class S3UpdateChecker extends Thread {
       return;
     }
     this.sqs = new AmazonSQSClient(credentials);
+    this.sqs.setEndpoint("sdb.us-west-2.amazonaws.com");
   }
 
   /**
@@ -52,7 +55,7 @@ public class S3UpdateChecker extends Thread {
       messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
     } catch (AmazonServiceException aex) {
       System.err.format("ERROR: Amazon rejected message get request. "
-          + "Reason: %s%n", aex.getErrorMessage());
+          + "Reason: %s%n", aex.getMessage());
     } catch (AmazonClientException aex) {
       System.err.format("ERROR: Unable to communicate with the Amazon API. "
           + "Reason: %s%n", aex.getMessage());
@@ -93,7 +96,7 @@ public class S3UpdateChecker extends Thread {
    * Periodically polls S3 for changes and triggers Redis updates when necessary.
    */
   public void run() {
-    int sleepTime = 4000; //4 seconds
+    int sleepTime = 7000; //4 seconds
     while (true) {
       List<Message> messages = pollForUpdates();
       //TODO: Replace for loop with updateRedisIndex method once implemented
