@@ -8,9 +8,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.iterable.S3Objects;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
 
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
@@ -75,14 +73,13 @@ public class AmazonFileApi {
 
   /**
    * Synchronously downloads a file from S3.
-   * @param object The S3 object to download
+   * @param key The key of the S3 object to download
    * @return Byte array of file
    * @throws FileTooLargeException Throws if file is over 2GB
    * @throws IOException Throws for connection errors with S3
    * @throws NullPointerException Throws when file pointer fails to initialize
    */
-  public byte[] getFile(S3Object object)
-      throws FileTooLargeException, IOException, NullPointerException {
+  public byte[] getS3File(String key) throws FileTooLargeException, IOException, NullPointerException {
     byte[] fileData;
     S3Object object = getObject(key);
     ObjectMetadata objectMetadata = object.getObjectMetadata();
