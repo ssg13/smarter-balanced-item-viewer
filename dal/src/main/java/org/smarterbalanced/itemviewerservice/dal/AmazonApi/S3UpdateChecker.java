@@ -91,15 +91,12 @@ public class S3UpdateChecker extends Thread {
     int sleepTime = 7000; //4 seconds
     while (true) {
       List<Message> messages = pollForUpdates();
-      //TODO: Replace for loop with updateRedisIndex method once implemented
-      for (Message message : messages) {
-        System.out.println("Message Body: " + message.getBody());
-        for (Entry<String, String> entry : message.getAttributes().entrySet()) {
-          System.out.println("Message Attribute");
-          System.out.println("Name: " + entry.getKey());
-          System.out.println("Value: " + entry.getValue());
-        }
-      }
+      /*
+      TODO: Act on new messages in the queue.
+      Once we have determined the best way to unpack and store packages
+      we need to use this to process new packages that are added to the S3 bucket
+      while the application is running.
+       */
       try {
         Thread.sleep(sleepTime);
       } catch (InterruptedException e) {
