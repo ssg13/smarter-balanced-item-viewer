@@ -5,6 +5,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 
+
 public class S3UpdateChecker extends Thread {
   private String queueUrl;
   private AmazonSQS sqs;
@@ -30,6 +32,7 @@ public class S3UpdateChecker extends Thread {
   public S3UpdateChecker(String queueUrl) {
     AWSCredentials credentials;
     this.queueUrl = queueUrl;
+    Region usWest2 = Region.getRegion(Regions.US_WEST_2);
     try {
       credentials = new ProfileCredentialsProvider().getCredentials();
     } catch (Exception e) {
@@ -39,6 +42,8 @@ public class S3UpdateChecker extends Thread {
       return;
     }
     this.sqs = new AmazonSQSClient(credentials);
+    this.sqs.setRegion(usWest2);
+    this.sqs.setEndpoint("sdb.us-west-2.amazonaws.com");
   }
 
   /**
@@ -52,7 +57,7 @@ public class S3UpdateChecker extends Thread {
       messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
     } catch (AmazonServiceException aex) {
       System.err.format("ERROR: Amazon rejected message get request. "
-          + "Reason: %s%n", aex.getErrorMessage());
+          + "Reason: %s%n", aex.getMessage());
     } catch (AmazonClientException aex) {
       System.err.format("ERROR: Unable to communicate with the Amazon API. "
           + "Reason: %s%n", aex.getMessage());
@@ -80,32 +85,18 @@ public class S3UpdateChecker extends Thread {
   }
 
   /**
-   * Syncs changes in S3 with Redis cache.
-   */
-  public void updateRedisIndex() {
-    /*TODO: Once Redis is implemented, use this to sync S3 file uploads/deletions with Redis
-    If a new file is added to S3 check if it is in the Redis cache. If not add it, else ignore.
-    If a file is removed from S3 check if it is in the Redis cache. If  not, ignore, else delete it.
-     */
-  }
-
-  /**
    * Periodically polls S3 for changes and triggers Redis updates when necessary.
    */
   public void run() {
-    int sleepTime = 4000; //4 seconds
+    int sleepTime = 7000; //4 seconds
     while (true) {
       List<Message> messages = pollForUpdates();
-      //TODO: Replace for loop with updateRedisIndex method once implemented
-      for (Message message : messages) {
-        System.out.println("Message Body: " + message.getBody());
-        for (Entry<String, String> entry : message.getAttributes().entrySet()) {
-          System.out.println("Message Attribute");
-          System.out.println("Name: " + entry.getKey());
-          System.out.println("Value: " + entry.getValue());
-        }
-      }
-      removeFromQueue(messages);
+      /*
+      TODO: Act on new messages in the queue.
+      Once we have determined the best way to unpack and store packages
+      we need to use this to process new packages that are added to the S3 bucket
+      while the application is running.
+       */
       try {
         Thread.sleep(sleepTime);
       } catch (InterruptedException e) {
