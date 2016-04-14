@@ -20,9 +20,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 
+
 public class S3UpdateChecker extends Thread {
   private String queueUrl;
-  private AmazonSQSClient sqs;
+  private AmazonSQS sqs;
 
   /**
    * Creates a new instance of the S3UpdateChecker class.
@@ -41,6 +42,7 @@ public class S3UpdateChecker extends Thread {
       return;
     }
     this.sqs = new AmazonSQSClient(credentials);
+    this.sqs.setRegion(usWest2);
     this.sqs.setEndpoint("sdb.us-west-2.amazonaws.com");
   }
 
@@ -83,16 +85,6 @@ public class S3UpdateChecker extends Thread {
   }
 
   /**
-   * Syncs changes in S3 with Redis cache.
-   */
-  public void updateRedisIndex() {
-    /*TODO: Once Redis is implemented, use this to sync S3 file uploads/deletions with Redis
-    If a new file is added to S3 check if it is in the Redis cache. If not add it, else ignore.
-    If a file is removed from S3 check if it is in the Redis cache. If  not, ignore, else delete it.
-     */
-  }
-
-  /**
    * Periodically polls S3 for changes and triggers Redis updates when necessary.
    */
   public void run() {
@@ -108,7 +100,6 @@ public class S3UpdateChecker extends Thread {
           System.out.println("Value: " + entry.getValue());
         }
       }
-      removeFromQueue(messages);
       try {
         Thread.sleep(sleepTime);
       } catch (InterruptedException e) {
