@@ -2,6 +2,7 @@ package org.smarterbalanced.itemviewerservice.dal.AmazonApi;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -51,7 +52,7 @@ public class AmazonFileApi {
         this.s3connection.createBucket(new CreateBucketRequest(bucketName));
       }
     } catch (Exception e) {
-
+      System.err.println("Failed to create bucket");
     }
   }
 
@@ -142,13 +143,21 @@ public class AmazonFileApi {
     return objectFileStream;
   }
 
-  public void storeFile(InputStream fileStream, String key, int size) {
+  public void storeFile(InputStream fileStream, String key, long size) {
     ObjectMetadata objectData = new ObjectMetadata();
     objectData.setContentLength(size);
     try{
       this.s3connection.putObject(new PutObjectRequest(this.bucketName, key, fileStream, objectData));
-    } catch (Exception e) {
-
+    } catch (AmazonServiceException ase) {
+      System.err.println("Amazon rejected putObject request.");
+      System.err.println("Error Message:    " + ase.getMessage());
+      System.err.println("HTTP Status Code: " + ase.getStatusCode());
+      System.err.println("AWS Error Code:   " + ase.getErrorCode());
+      System.err.println("Error Type:       " + ase.getErrorType());
+      System.err.println("Request ID:       " + ase.getRequestId());
+    } catch (AmazonClientException ace) {
+      System.err.println("ERROR: Network error connecting to Amazon S3.");
+      System.err.println("Error Message: " + ace.getMessage());
     }
   }
 
