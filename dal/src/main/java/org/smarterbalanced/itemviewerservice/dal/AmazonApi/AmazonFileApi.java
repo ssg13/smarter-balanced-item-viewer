@@ -8,16 +8,12 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.iterable.S3Objects;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
 
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -36,15 +32,27 @@ public class AmazonFileApi {
     this.s3connection = new AmazonS3Client();
     Region usWest2 = Region.getRegion(Regions.US_WEST_2);
     this.s3connection.setRegion(usWest2);
+    //Create the bucket if it does not exist.
+    createBucket(bucketName);
   }
 
   public String getBucketName() {
     return this.bucketName;
   }
 
-  public S3Object getObject(String key) {
+  private S3Object getObject(String key) {
     S3Object object = s3connection.getObject(new GetObjectRequest(this.bucketName, key));
     return object;
+  }
+
+  private void createBucket(String bucketName) {
+    try {
+      if(!(this.s3connection.doesBucketExist(bucketName))) {
+        this.s3connection.createBucket(new CreateBucketRequest(bucketName));
+      }
+    } catch (Exception e) {
+
+    }
   }
 
   /**
@@ -132,6 +140,16 @@ public class AmazonFileApi {
       throw new NullPointerException("");
     }
     return objectFileStream;
+  }
+
+  public void storeFile(InputStream fileStream, String key, int size) {
+    ObjectMetadata objectData = new ObjectMetadata();
+    objectData.setContentLength(size);
+    try{
+      this.s3connection.putObject(new PutObjectRequest(this.bucketName, key, fileStream, objectData));
+    } catch (Exception e) {
+
+    }
   }
 
 }
