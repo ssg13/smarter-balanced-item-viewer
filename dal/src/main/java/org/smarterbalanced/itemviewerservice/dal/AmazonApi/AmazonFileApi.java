@@ -2,23 +2,28 @@ package org.smarterbalanced.itemviewerservice.dal.AmazonApi;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.iterable.S3Objects;
-import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.model.CreateBucketRequest;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.util.IOUtils;
 
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+
 
 public class AmazonFileApi {
   private String bucketName;
@@ -36,11 +41,6 @@ public class AmazonFileApi {
     this.s3connection.setEndpoint("s3-us-west-2.amazonaws.com");
     //Create the bucket if it does not exist.
     createBucket(bucketName);
-    System.out.println("BUCKET LOCATION: " + this.s3connection.getBucketLocation(bucketName));
-  }
-
-  public String getBucketName() {
-    return this.bucketName;
   }
 
   private S3Object getObject(String key) {
@@ -49,14 +49,11 @@ public class AmazonFileApi {
   }
 
   private void createBucket(String bucketName) {
-    System.out.println("Called createBucket.");
     try {
-      if(!(this.s3connection.doesBucketExist(bucketName))) {
-        System.out.println("Making new bucket.");
+      if (!(this.s3connection.doesBucketExist(bucketName))) {
         this.s3connection.createBucket(new CreateBucketRequest(bucketName));
-        String bucketLocation = s3connection.getBucketLocation(new GetBucketLocationRequest(bucketName));
-        System.out.println("Created bucket in region: " + bucketLocation);
       }
+
     } catch (Exception e) {
       System.err.println("Failed to create bucket");
     }
@@ -149,11 +146,19 @@ public class AmazonFileApi {
     return objectFileStream;
   }
 
+  /**
+   * Store file.
+   *
+   * @param fileStream Input stream for the ZipFile
+   * @param key        Key to use when storing the file
+   * @param size       File size in bytes
+   */
   public void storeFile(InputStream fileStream, String key, long size) {
     ObjectMetadata objectData = new ObjectMetadata();
     objectData.setContentLength(size);
-    try{
-      this.s3connection.putObject(new PutObjectRequest(this.bucketName, key, fileStream, objectData));
+    try {
+      this.s3connection.putObject(new PutObjectRequest(
+              this.bucketName, key, fileStream, objectData));
     } catch (AmazonServiceException ase) {
       System.err.println("Amazon rejected putObject request.");
       System.err.println("Error Message:    " + ase.getMessage());

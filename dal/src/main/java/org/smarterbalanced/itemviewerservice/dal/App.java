@@ -1,13 +1,12 @@
 package org.smarterbalanced.itemviewerservice.dal;
 
-import org.smarterbalanced.itemviewerservice.dal.AmazonApi.S3UpdateChecker;
 import org.smarterbalanced.itemviewerservice.dal.AmazonApi.AmazonFileApi;
+import org.smarterbalanced.itemviewerservice.dal.AmazonApi.S3UpdateChecker;
 import org.smarterbalanced.itemviewerservice.dal.Redis.RedisConnection;
 import org.smarterbalanced.itemviewerservice.dal.Zip.StoreZip;
 import redis.clients.jedis.JedisPool;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Date;
 
@@ -28,7 +27,9 @@ public class App {
     AmazonFileApi amazonApi = new AmazonFileApi(packageBucket);
     JedisPool pool = new JedisPool();
     RedisConnection redis = new RedisConnection(pool);
-    long delta, startTime, endTime;
+    long delta;
+    long startTime;
+    long endTime;
 
     byte[] zip;
     try {
@@ -40,7 +41,7 @@ public class App {
       System.out.println("Downloading the zip from Amazon took " + delta + " milliseconds.");
       InputStream zipStream = new ByteArrayInputStream(zip);
       startTime = new Date().getTime();
-      StoreZip.unpackToRedis(zipStream, fileName , redis);
+      StoreZip.unpackToRedis(zipStream, redis);
       endTime = new Date().getTime();
       delta = endTime - startTime;
       System.out.println("Storing the zip to Redis took " + delta + " milliseconds.");
@@ -58,7 +59,8 @@ public class App {
       StoreZip.unpackToBucket(zipStream, "test-contentpack");
       endTime = new Date().getTime();
       delta = endTime - startTime;
-      System.out.println("Storing the zip contents to an Amazon bucket took " + delta + " milliseconds.");
+      System.out.println("Storing the zip contents to an Amazon bucket took "
+              + delta + " milliseconds.");
     } catch (Exception e) {
       System.out.println("Error");
       System.out.println(e.getMessage());
