@@ -6,6 +6,10 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
 
 /**
  * Store, fetch and delete objects from a Redis cache.
@@ -62,6 +66,10 @@ public class RedisConnection {
     }
   }
 
+  public List<String> listKeys() {
+    List<String> keys = new ArrayList<String>();
+    return keys;
+  }
 
   /**
    * Store text file.

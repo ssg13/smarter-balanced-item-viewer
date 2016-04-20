@@ -33,8 +33,10 @@ public class AmazonFileApi {
     this.s3connection = new AmazonS3Client();
     Region usWest2 = Region.getRegion(Regions.US_WEST_2);
     this.s3connection.setRegion(usWest2);
+    this.s3connection.setEndpoint("s3-us-west-2.amazonaws.com");
     //Create the bucket if it does not exist.
     createBucket(bucketName);
+    System.out.println("BUCKET LOCATION: " + this.s3connection.getBucketLocation(bucketName));
   }
 
   public String getBucketName() {
@@ -47,9 +49,13 @@ public class AmazonFileApi {
   }
 
   private void createBucket(String bucketName) {
+    System.out.println("Called createBucket.");
     try {
       if(!(this.s3connection.doesBucketExist(bucketName))) {
+        System.out.println("Making new bucket.");
         this.s3connection.createBucket(new CreateBucketRequest(bucketName));
+        String bucketLocation = s3connection.getBucketLocation(new GetBucketLocationRequest(bucketName));
+        System.out.println("Created bucket in region: " + bucketLocation);
       }
     } catch (Exception e) {
       System.err.println("Failed to create bucket");

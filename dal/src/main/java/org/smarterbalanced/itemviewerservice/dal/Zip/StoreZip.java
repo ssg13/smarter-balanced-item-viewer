@@ -39,19 +39,38 @@ public class StoreZip {
     String bucketName = "sb-" + fileName;
     ZipInputStream zipStream = new ZipInputStream(fileStream);
     ZipEntry entry;
-    AmazonFileApi amazonApi = new AmazonFileApi("bucketName");
+    int size;
+    AmazonFileApi amazonApi = new AmazonFileApi(bucketName);
     try {
       while ((entry = zipStream.getNextEntry()) != null) {
-        byte[] fileData = new byte[500000000];
+        size = Math.toIntExact(entry.getSize());
+        byte[] fileData = new byte[size];
         zipStream.read(fileData);
         InputStream entryStream = new ByteArrayInputStream(fileData);
         amazonApi.storeFile( entryStream, entry.getName(), entry.getSize());
         System.out.println(entry.getName());
       }
     } catch (Exception e) {
-        System.err.println("ERROR: Failed to stored file in Amazon bucket");
+        System.err.println("ERROR: Failed to store file in Amazon bucket");
     }
     return bucketName;
+  }
+
+  public static void unpackToRedis(InputStream fileStream, String fileName, RedisConnection redis) {
+    ZipInputStream zipStream = new ZipInputStream(fileStream);
+    ZipEntry entry;
+    int size;
+    try {
+      while ((entry = zipStream.getNextEntry()) != null) {
+        size = Math.toIntExact(entry.getSize());
+        byte[] fileData = new byte[size];
+        zipStream.read(fileData);
+        InputStream entryStream = new ByteArrayInputStream(fileData);
+        redis.storeByteFile(entry.getName(), fileData);
+      }
+    } catch (Exception e) {
+      System.err.println("ERROR: Failed to store file in Redis");
+    }
   }
 
 }
