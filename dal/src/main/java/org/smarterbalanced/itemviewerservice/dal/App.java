@@ -46,11 +46,10 @@ public class App {
       delta = endTime - startTime;
       System.out.println("Storing the zip to Redis took " + delta + " milliseconds.");
     } catch (Exception e) {
-      System.out.println("Error");
+      System.out.println("Error storing files in Redis.");
       System.out.println(e.getMessage());
       System.exit(1);
     }
-
 
     try {
       zip = amazonApi.getS3File("IrpContentPackage.zip");
@@ -62,7 +61,7 @@ public class App {
       System.out.println("Storing the zip contents to an Amazon bucket took "
               + delta + " milliseconds.");
     } catch (Exception e) {
-      System.out.println("Error");
+      System.out.println("Error storing files in S3.");
       System.out.println(e.getMessage());
       System.exit(1);
     }

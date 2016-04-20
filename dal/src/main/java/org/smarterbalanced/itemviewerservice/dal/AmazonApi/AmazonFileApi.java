@@ -54,13 +54,18 @@ public class AmazonFileApi {
         this.s3connection.createBucket(new CreateBucketRequest(bucketName));
       }
 
-    } catch (Exception e) {
+    } catch (AmazonServiceException ase) {
       System.err.println("Failed to create bucket");
+      throw ase;
+    } catch (AmazonClientException ace) {
+      System.err.println("ERROR: Network error connecting to Amazon S3.");
+      System.err.println("Error Message: " + ace.getMessage());
+      throw ace;
     }
   }
 
   /**
-   * Lists all objects in the S3 .
+   * Lists all objects in the S3 bucket.
    * @return List of all objects in the S3 bucket
    */
   public List<String> getAllKeys() {
@@ -85,9 +90,11 @@ public class AmazonFileApi {
       System.err.println("AWS Error Code:   " + ase.getErrorCode());
       System.err.println("Error Type:       " + ase.getErrorType());
       System.err.println("Request ID:       " + ase.getRequestId());
+      throw ase;
     } catch (AmazonClientException ace) {
       System.err.println("ERROR: Network error connecting to Amazon S3.");
       System.err.println("Error Message: " + ace.getMessage());
+      throw ace;
     }
     return keys;
   }
@@ -166,9 +173,11 @@ public class AmazonFileApi {
       System.err.println("AWS Error Code:   " + ase.getErrorCode());
       System.err.println("Error Type:       " + ase.getErrorType());
       System.err.println("Request ID:       " + ase.getRequestId());
+      throw ase;
     } catch (AmazonClientException ace) {
       System.err.println("ERROR: Network error connecting to Amazon S3.");
       System.err.println("Error Message: " + ace.getMessage());
+      throw ace;
     }
   }
 
