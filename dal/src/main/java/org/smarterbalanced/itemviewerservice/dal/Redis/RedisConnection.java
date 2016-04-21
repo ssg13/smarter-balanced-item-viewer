@@ -8,6 +8,7 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 
@@ -66,8 +67,10 @@ public class RedisConnection {
     }
   }
 
-  public List<String> listKeys() {
-    List<String> keys = new ArrayList<String>();
+  public Set<String> listKeys() {
+    Jedis jedis = this.pool.getResource();
+    Set<String> keys = jedis.keys("*");
+    jedis.close();
     return keys;
   }
 
@@ -130,8 +133,8 @@ public class RedisConnection {
       if (exists) {
         fileContents = jedis.get(byteKey);
       } else {
-        System.err.println(String.format("File with key %s not in Redis.", key));
-        throw new RedisFileException(String.format("File with key: %s is not in Redis.", key));
+        System.err.println("File with key " + key + " is not in Redis.");
+        throw new RedisFileException("File with key " + key + " is not in Redis.");
       }
 
     } catch (JedisConnectionException e) {

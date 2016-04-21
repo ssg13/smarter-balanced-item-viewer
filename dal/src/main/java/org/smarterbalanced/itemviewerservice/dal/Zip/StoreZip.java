@@ -60,10 +60,12 @@ public class StoreZip {
     int size;
     try {
       while ((entry = zipStream.getNextEntry()) != null) {
-        size = Math.toIntExact(entry.getSize());
-        byte[] fileData = new byte[size];
-        zipStream.read(fileData);
-        redis.storeByteFile(entry.getName(), fileData);
+        if (!entry.isDirectory()) {
+          size = Math.toIntExact(entry.getSize());
+          byte[] fileData = new byte[size];
+          zipStream.read(fileData);
+          redis.storeByteFile(entry.getName(), fileData);
+        }
       }
       zipStream.close();
     } catch (IOException e) {

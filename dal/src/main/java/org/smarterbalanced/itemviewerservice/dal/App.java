@@ -8,7 +8,11 @@ import redis.clients.jedis.JedisPool;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
+import java.util.Set;
 
 /**
  * The Application.
@@ -30,7 +34,7 @@ public class App {
     long delta;
     long startTime;
     long endTime;
-
+    String path = "C:\\Users\\smithgar\\Downloads\\scratch\\";
     byte[] zip;
     try {
       System.out.println("Starting Download");
@@ -51,6 +55,22 @@ public class App {
       System.exit(1);
     }
 
+    Set<String> keys = redis.listKeys();
+    try {
+      for (String key : keys) {
+        byte[] fileData = redis.getByteFile(key);
+        Path file = Paths.get(path + key);
+        Files.createDirectories(file.getParent());
+        Files.write(file, fileData);
+      }
+    } catch (Exception e) {
+      System.err.println("Failed to extract file from Redis to disk.");
+      System.err.println(e.getMessage());
+      e.printStackTrace();
+      System.exit(1);
+    }
+
+    /*
     try {
       zip = amazonApi.getS3File("IrpContentPackage.zip");
       InputStream zipStream = new ByteArrayInputStream(zip);
@@ -65,6 +85,7 @@ public class App {
       System.out.println(e.getMessage());
       System.exit(1);
     }
+    */
   }
 
 }
