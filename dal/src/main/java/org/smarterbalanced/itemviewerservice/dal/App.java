@@ -44,6 +44,7 @@ public class App {
       delta = endTime - startTime;
       System.out.println("Downloading the zip from Amazon took " + delta + " milliseconds.");
       InputStream zipStream = new ByteArrayInputStream(zip);
+      System.out.println("Starting unzip to Redis.");
       startTime = new Date().getTime();
       StoreZip.unpackToRedis(zipStream, redis);
       endTime = new Date().getTime();

@@ -63,8 +63,9 @@ public class StoreZip {
         if (!entry.isDirectory()) {
           size = Math.toIntExact(entry.getSize());
           byte[] fileData = new byte[size];
-          zipStream.read(fileData);
-          redis.storeByteFile(entry.getName(), fileData);
+          while (zipStream.read(fileData, 0, size) != -1) {
+            redis.storeByteFile(entry.getName(), fileData);
+          }
         }
       }
       zipStream.close();
