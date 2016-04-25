@@ -16,6 +16,8 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.util.IOUtils;
 
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+import org.apache.commons.codec.binary.Hex;
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
 
 import java.io.IOException;
@@ -24,6 +26,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -111,8 +114,10 @@ public class AmazonFileApi {
    * @throws NullPointerException Throws when file pointer fails to initialize
    */
   public byte[] getS3File(String key)
-          throws FileTooLargeException, IOException, NullPointerException {
-    byte[] fileData = null;
+          throws FileTooLargeException, IOException, NullPointerException, NoSuchAlgorithmException {
+    byte[] fileData;
+    String awsMD5;
+    String downloadMD5;
     S3Object object = getObject(key);
     ObjectMetadata objectMetadata = object.getObjectMetadata();
     long awsFileSize = objectMetadata.getContentLength();
@@ -122,14 +127,31 @@ public class AmazonFileApi {
     }
 
     try {
+      awsMD5 = object.getObjectMetadata().getETag();
+      MessageDigest md5 = MessageDigest.getInstance("MD5");
       InputStream objectFileStream = object.getObjectContent();
-      fileData = IOUtils.toByteArray(objectFileStream);
+      DigestInputStream digestStream = new DigestInputStream(objectFileStream, md5);
+      fileData = IOUtils.toByteArray(digestStream);
+      downloadMD5 = Hex.encodeHexString(md5.digest());
+      digestStream.close();
       objectFileStream.close();
+      if (awsMD5.contains("-")) {
+        awsMD5 = awsMD5.substring(0, 32);
+      }
+      System.out.println("DL  MD5: " + downloadMD5);
+      System.out.println("AWS MD5: " + awsMD5);
+      if (!downloadMD5.equals(awsMD5)) {
+        System.err.println("MD5 sums do mot match.");
+        throw new SecurityException("MD5 sums do not match.");
+      }
     } catch (IOException ex) {
       System.err.println("Failed to open file stream with Amazon S3.");
       throw ex;
     } catch (NullPointerException ex) {
       System.err.println("Amazon S3 file stream is null");
+      throw ex;
+    } catch (NoSuchAlgorithmException ex) {
+      System.err.println();
       throw ex;
     }
     return fileData;
