@@ -7,6 +7,7 @@ import org.smarterbalanced.itemviewerservice.dal.Zip.StoreZip;
 import redis.clients.jedis.JedisPool;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,14 +40,21 @@ public class App {
     try {
       System.out.println("Starting Download");
       startTime = new Date().getTime();
-      zip = amazonApi.getS3File("IrpContentPackage.zip");
+      zip = amazonApi.getS3File(fileName);
       endTime = new Date().getTime();
       delta = endTime - startTime;
       System.out.println("Downloading the zip from Amazon took " + delta + " milliseconds.");
-      InputStream zipStream = new ByteArrayInputStream(zip);
+      System.out.println("Starting to write zip file to disk.");
+      startTime = new Date().getTime();
+      FileOutputStream fos = new FileOutputStream(path + fileName);
+      fos.write(zip);
+      fos.close();
+      endTime = new Date().getTime();
+      delta = endTime - startTime;
+      System.out.println("Writing zip file to disk took " + delta + " milliseconds.");
       System.out.println("Starting unzip to Redis.");
       startTime = new Date().getTime();
-      StoreZip.unpackToRedis(zipStream, redis);
+      StoreZip.unpackToRedis(path + fileName, redis);
       endTime = new Date().getTime();
       delta = endTime - startTime;
       System.out.println("Storing the zip to Redis took " + delta + " milliseconds.");

@@ -20,6 +20,9 @@ import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeExceptio
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,7 +112,7 @@ public class AmazonFileApi {
    */
   public byte[] getS3File(String key)
           throws FileTooLargeException, IOException, NullPointerException {
-    byte[] fileData;
+    byte[] fileData = null;
     S3Object object = getObject(key);
     ObjectMetadata objectMetadata = object.getObjectMetadata();
     long awsFileSize = objectMetadata.getContentLength();

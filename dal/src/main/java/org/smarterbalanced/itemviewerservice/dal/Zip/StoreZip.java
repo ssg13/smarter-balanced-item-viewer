@@ -9,8 +9,12 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
+
+import static com.amazonaws.util.IOUtils.toByteArray;
 
 
 /**
@@ -38,8 +42,8 @@ public class StoreZip {
         zipStream.read(fileData);
         InputStream entryStream = new ByteArrayInputStream(fileData);
         amazonApi.storeFile(entryStream, entry.getName(), entry.getSize());
-        zipStream.close();
       }
+      zipStream.close();
     } catch (IOException e) {
       System.err.println("ERROR: Failed to store file: " + fileName + " in Amazon bucket");
       throw e;
@@ -53,22 +57,23 @@ public class StoreZip {
    * @param fileStream File stream connected to a zip file.
    * @param redis      The Redis instance to unpack the zip to.
    */
-  public static void unpackToRedis(InputStream fileStream, RedisConnection redis)
+  public static void unpackToRedis(String path, RedisConnection redis)
           throws IOException, FileTooLargeException, RedisFileException {
-    ZipInputStream zipStream = new ZipInputStream(fileStream);
+    ZipFile zipFile = new ZipFile(path);
     ZipEntry entry;
     int size;
     try {
-      while ((entry = zipStream.getNextEntry()) != null) {
+      Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+      while(entries.hasMoreElements()) {
+        entry = entries.nextElement();
         if (!entry.isDirectory()) {
           size = Math.toIntExact(entry.getSize());
-          byte[] fileData = new byte[size];
-          while (zipStream.read(fileData, 0, size) != -1) {
-            redis.storeByteFile(entry.getName(), fileData);
-          }
+          InputStream zipStream = zipFile.getInputStream(entry);
+          byte[] fileData = toByteArray(zipStream);
+          redis.storeByteFile(entry.getName(), fileData);
         }
       }
-      zipStream.close();
     } catch (IOException e) {
       System.err.println("ERROR: File stream error.");
       throw e;
