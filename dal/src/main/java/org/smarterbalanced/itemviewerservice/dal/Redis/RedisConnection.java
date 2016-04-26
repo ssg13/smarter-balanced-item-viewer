@@ -67,6 +67,11 @@ public class RedisConnection {
     }
   }
 
+  /**
+   * List all keys in Redis.
+   *
+   * @return a String set containing all of the keys in Redis.
+   */
   public Set<String> listKeys() {
     Jedis jedis = this.pool.getResource();
     Set<String> keys = jedis.keys("*");

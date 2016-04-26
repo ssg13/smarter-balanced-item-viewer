@@ -16,7 +16,6 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.util.IOUtils;
 
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
 
@@ -26,7 +25,6 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -45,8 +43,6 @@ public class AmazonFileApi {
     Region usWest2 = Region.getRegion(Regions.US_WEST_2);
     this.s3connection.setRegion(usWest2);
     this.s3connection.setEndpoint("s3-us-west-2.amazonaws.com");
-    //Create the bucket if it does not exist.
-    createBucket(bucketName);
   }
 
   private S3Object getObject(String key) {
@@ -114,7 +110,8 @@ public class AmazonFileApi {
    * @throws NullPointerException Throws when file pointer fails to initialize
    */
   public byte[] getS3File(String key)
-          throws FileTooLargeException, IOException, NullPointerException, NoSuchAlgorithmException {
+          throws FileTooLargeException, IOException, NullPointerException,
+      NoSuchAlgorithmException {
     byte[] fileData;
     String awsMD5;
     String downloadMD5;
@@ -138,12 +135,8 @@ public class AmazonFileApi {
       if (awsMD5.contains("-")) {
         awsMD5 = awsMD5.substring(0, 32);
       }
-      System.out.println("DL  MD5: " + downloadMD5);
-      System.out.println("AWS MD5: " + awsMD5);
-      if (!downloadMD5.equals(awsMD5)) {
-        System.err.println("MD5 sums do mot match.");
-        throw new SecurityException("MD5 sums do not match.");
-      }
+      System.out.println("Zip MD5:  " + downloadMD5);
+      System.out.println("AWS ETag: " + awsMD5);
     } catch (IOException ex) {
       System.err.println("Failed to open file stream with Amazon S3.");
       throw ex;
@@ -151,7 +144,7 @@ public class AmazonFileApi {
       System.err.println("Amazon S3 file stream is null");
       throw ex;
     } catch (NoSuchAlgorithmException ex) {
-      System.err.println();
+      System.err.println("MD5 checksum generation is not supported.");
       throw ex;
     }
     return fileData;
@@ -173,7 +166,7 @@ public class AmazonFileApi {
       throw ex;
     }
     if (objectFileStream == null) {
-      throw new NullPointerException("");
+      throw new NullPointerException("AWS file stream is null.");
     }
     return objectFileStream;
   }

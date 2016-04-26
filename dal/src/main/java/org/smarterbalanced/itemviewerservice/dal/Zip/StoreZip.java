@@ -1,20 +1,19 @@
 package org.smarterbalanced.itemviewerservice.dal.Zip;
 
+import static com.amazonaws.util.IOUtils.toByteArray;
+
 import org.smarterbalanced.itemviewerservice.dal.AmazonApi.AmazonFileApi;
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.RedisFileException;
 import org.smarterbalanced.itemviewerservice.dal.Redis.RedisConnection;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
-
-import static com.amazonaws.util.IOUtils.toByteArray;
 
 
 /**
@@ -54,7 +53,7 @@ public class StoreZip {
   /**
    * Extracts and stores the contents of a zip file in Redis.
    *
-   * @param fileStream File stream connected to a zip file.
+   * @param path File file path for a zip file to unpack.
    * @param redis      The Redis instance to unpack the zip to.
    */
   public static void unpackToRedis(String path, RedisConnection redis)
@@ -65,7 +64,7 @@ public class StoreZip {
     try {
       Enumeration<? extends ZipEntry> entries = zipFile.entries();
 
-      while(entries.hasMoreElements()) {
+      while (entries.hasMoreElements()) {
         entry = entries.nextElement();
         if (!entry.isDirectory()) {
           size = Math.toIntExact(entry.getSize());
