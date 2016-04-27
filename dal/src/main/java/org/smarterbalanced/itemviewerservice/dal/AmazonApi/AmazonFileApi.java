@@ -2,26 +2,32 @@ package org.smarterbalanced.itemviewerservice.dal.AmazonApi;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.iterable.S3Objects;
+import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.util.IOUtils;
 
+import org.apache.commons.codec.binary.Hex;
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+
+
 
 public class AmazonFileApi {
   private String bucketName;
@@ -36,19 +42,32 @@ public class AmazonFileApi {
     this.s3connection = new AmazonS3Client();
     Region usWest2 = Region.getRegion(Regions.US_WEST_2);
     this.s3connection.setRegion(usWest2);
+    this.s3connection.setEndpoint("s3-us-west-2.amazonaws.com");
   }
 
-  public String getBucketName() {
-    return this.bucketName;
-  }
-
-  public S3Object getObject(String key) {
+  private S3Object getObject(String key) {
     S3Object object = s3connection.getObject(new GetObjectRequest(this.bucketName, key));
     return object;
   }
 
+  private void createBucket(String bucketName) {
+    try {
+      if (!(this.s3connection.doesBucketExist(bucketName))) {
+        this.s3connection.createBucket(new CreateBucketRequest(bucketName));
+      }
+
+    } catch (AmazonServiceException ase) {
+      System.err.println("Failed to create bucket");
+      throw ase;
+    } catch (AmazonClientException ace) {
+      System.err.println("ERROR: Network error connecting to Amazon S3.");
+      System.err.println("Error Message: " + ace.getMessage());
+      throw ace;
+    }
+  }
+
   /**
-   * Lists all objects in the S3 .
+   * Lists all objects in the S3 bucket.
    * @return List of all objects in the S3 bucket
    */
   public List<String> getAllKeys() {
@@ -73,9 +92,11 @@ public class AmazonFileApi {
       System.err.println("AWS Error Code:   " + ase.getErrorCode());
       System.err.println("Error Type:       " + ase.getErrorType());
       System.err.println("Request ID:       " + ase.getRequestId());
+      throw ase;
     } catch (AmazonClientException ace) {
       System.err.println("ERROR: Network error connecting to Amazon S3.");
       System.err.println("Error Message: " + ace.getMessage());
+      throw ace;
     }
     return keys;
   }
@@ -89,8 +110,11 @@ public class AmazonFileApi {
    * @throws NullPointerException Throws when file pointer fails to initialize
    */
   public byte[] getS3File(String key)
-          throws FileTooLargeException, IOException, NullPointerException {
+          throws FileTooLargeException, IOException, NullPointerException,
+      NoSuchAlgorithmException {
     byte[] fileData;
+    String awsMD5;
+    String downloadMD5;
     S3Object object = getObject(key);
     ObjectMetadata objectMetadata = object.getObjectMetadata();
     long awsFileSize = objectMetadata.getContentLength();
@@ -100,14 +124,27 @@ public class AmazonFileApi {
     }
 
     try {
+      awsMD5 = object.getObjectMetadata().getETag();
+      MessageDigest md5 = MessageDigest.getInstance("MD5");
       InputStream objectFileStream = object.getObjectContent();
-      fileData = IOUtils.toByteArray(objectFileStream);
+      DigestInputStream digestStream = new DigestInputStream(objectFileStream, md5);
+      fileData = IOUtils.toByteArray(digestStream);
+      downloadMD5 = Hex.encodeHexString(md5.digest());
+      digestStream.close();
       objectFileStream.close();
+      if (awsMD5.contains("-")) {
+        awsMD5 = awsMD5.substring(0, 32);
+      }
+      System.out.println("Zip MD5:  " + downloadMD5);
+      System.out.println("AWS ETag: " + awsMD5);
     } catch (IOException ex) {
       System.err.println("Failed to open file stream with Amazon S3.");
       throw ex;
     } catch (NullPointerException ex) {
       System.err.println("Amazon S3 file stream is null");
+      throw ex;
+    } catch (NoSuchAlgorithmException ex) {
+      System.err.println("MD5 checksum generation is not supported.");
       throw ex;
     }
     return fileData;
@@ -129,9 +166,37 @@ public class AmazonFileApi {
       throw ex;
     }
     if (objectFileStream == null) {
-      throw new NullPointerException("");
+      throw new NullPointerException("AWS file stream is null.");
     }
     return objectFileStream;
+  }
+
+  /**
+   * Store file.
+   *
+   * @param fileStream Input stream for the ZipFile
+   * @param key        Key to use when storing the file
+   * @param size       File size in bytes
+   */
+  public void storeFile(InputStream fileStream, String key, long size) {
+    ObjectMetadata objectData = new ObjectMetadata();
+    objectData.setContentLength(size);
+    try {
+      this.s3connection.putObject(new PutObjectRequest(
+              this.bucketName, key, fileStream, objectData));
+    } catch (AmazonServiceException ase) {
+      System.err.println("Amazon rejected putObject request.");
+      System.err.println("Error Message:    " + ase.getMessage());
+      System.err.println("HTTP Status Code: " + ase.getStatusCode());
+      System.err.println("AWS Error Code:   " + ase.getErrorCode());
+      System.err.println("Error Type:       " + ase.getErrorType());
+      System.err.println("Request ID:       " + ase.getRequestId());
+      throw ase;
+    } catch (AmazonClientException ace) {
+      System.err.println("ERROR: Network error connecting to Amazon S3.");
+      System.err.println("Error Message: " + ace.getMessage());
+      throw ace;
+    }
   }
 
 }

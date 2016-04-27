@@ -99,6 +99,24 @@ public class RedisConnectionTest {
   }
   @After
   public void cleanup() {
+    try {
+      this.redis.removeFile("validTestKey");
+    } catch (Exception e) {
+      //Cleanup failed. This may be due to failing tests. Safe to ignore here.
+    }
+
+    try {
+      this.redis.removeFile("goodByteTestKey");
+    } catch (Exception e) {
+      //Cleanup failed. This may be due to failing tests. Safe to ignore here.
+    }
+
+    try {
+      this.redis.removeFile("goodStringTestKey");
+    } catch (Exception e) {
+      //Cleanup failed. This may be due to failing tests. Safe to ignore here.
+    }
+
     this.pool.destroy();
   }
 
