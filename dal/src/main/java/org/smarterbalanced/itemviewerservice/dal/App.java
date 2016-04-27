@@ -6,14 +6,16 @@ import org.smarterbalanced.itemviewerservice.dal.Redis.RedisConnection;
 import org.smarterbalanced.itemviewerservice.dal.Zip.StoreZip;
 import redis.clients.jedis.JedisPool;
 
-import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -28,9 +30,13 @@ public class App {
    */
   public static void main( String[] args ) {
     System.out.println( "Starting redis storage example." );
-    String fileName = "IrpContentPackage.zip";
-    String packageBucket = "cass-test";
-    AmazonFileApi amazonApi = new AmazonFileApi(packageBucket);
+
+    Properties config = new Properties();
+    InputStream configInput;
+
+    String fileName = "";
+    String packageBucket = "";
+    AmazonFileApi amazonApi;
     JedisPool pool = new JedisPool();
     RedisConnection redis = new RedisConnection(pool);
     long delta;
@@ -41,6 +47,20 @@ public class App {
     Path filePath = Paths.get(path);
     byte[] zip;
     byte[] fileData;
+
+    try {
+      configInput = new FileInputStream("dal-config.properties");
+      config.load(configInput);
+
+      fileName = config.getProperty("packageName");
+      packageBucket = config.getProperty("S3bucket");
+
+      configInput.close();
+    } catch (IOException e) {
+      System.err.println("Failed to load configuration file.");
+      System.exit(1);
+    }
+    amazonApi = new AmazonFileApi(packageBucket);
 
     try {
       Files.createDirectories(filePath);
