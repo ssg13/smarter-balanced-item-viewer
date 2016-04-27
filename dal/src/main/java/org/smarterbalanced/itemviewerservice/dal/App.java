@@ -36,7 +36,8 @@ public class App {
     long delta;
     long startTime;
     long endTime;
-    String path = "C:\\Users\\smithgar\\Downloads\\scratch\\";
+    System.getProperty("user.home");
+    String path = System.getProperty("user.home") + "/sb-redis-example/";
     Path filePath = Paths.get(path);
     byte[] zip;
     byte[] fileData;
