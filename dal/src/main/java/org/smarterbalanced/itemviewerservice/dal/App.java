@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,14 +24,21 @@ import java.util.logging.Logger;
  * The Application.
  */
 public class App {
-  private static final Logger log = Logger.getLogger(App.class.getName());
+  private static final Logger log = Logger.getLogger("org.smarterbalanced.dal");
   /**
    * The entry point of application.
    *
    * @param args There are no input arguments needed.
    */
   public static void main(String[] args) {
-    log.log(Level.INFO, "Starting redis storage example.");
+    try {
+      FileHandler logFile = new FileHandler("./dallog.log");
+      log.addHandler(logFile);
+    } catch (IOException e) {
+      log.log(Level.SEVERE, "Unable to create log file.");
+      System.exit(1);
+    }
+    System.out.println("Starting redis storage example.");
     String packageBucket = "";
     List<String> packageKeys = null;
     AmazonFileApi amazonApi;
@@ -67,22 +75,22 @@ public class App {
 
     for (String key : packageKeys) {
       try {
-        log.log(Level.INFO, "Starting zip file download from Amazon S3 bucket.");
+        System.out.println("Starting zip file download from Amazon S3 bucket.");
         startTime = new Date().getTime();
         zip = amazonApi.getS3File(key);
         endTime = new Date().getTime();
         delta = endTime - startTime;
-        log.log(Level.INFO, "Finished downloading zip file from Amazon S3.");
-        log.log(Level.INFO, "Downloading the zip from Amazon took " + delta + " milliseconds.");
-        log.log(Level.INFO, "Starting to write zip file to disk.");
+        System.out.println("Finished downloading zip file from Amazon S3.");
+        System.out.println("Downloading the zip from Amazon took " + delta + " milliseconds.");
+        System.out.println("Starting to write zip file to disk.");
         startTime = new Date().getTime();
         FileOutputStream fos = new FileOutputStream(path + key);
         fos.write(zip);
         fos.close();
         endTime = new Date().getTime();
         delta = endTime - startTime;
-        log.log(Level.INFO, "Finished writing zip file to disk.");
-        log.log(Level.INFO, "Writing zip file to disk took " + delta + " milliseconds.");
+        System.out.println("Finished writing zip file to disk.");
+        System.out.println("Writing zip file to disk took " + delta + " milliseconds.");
       } catch (Exception e) {
         log.log(Level.SEVERE, "Error fetching files from S3.", e);
         System.exit(1);
@@ -92,13 +100,13 @@ public class App {
 
     for (String key : packageKeys) {
       try {
-        log.log(Level.INFO, "Started unzipping package contents to Redis.");
+        System.out.println("Started unzipping package contents to Redis.");
         startTime = new Date().getTime();
         StoreZip.unpackToRedis(path + key, redis);
         endTime = new Date().getTime();
         delta = endTime - startTime;
-        log.log(Level.INFO, "Finished unzipping package contents to Redis.");
-        log.log(Level.INFO, "Unpacking the zip file to Redis took " + delta + " milliseconds.");
+        System.out.println("Finished unzipping package contents to Redis.");
+        System.out.println("Unpacking the zip file to Redis took " + delta + " milliseconds.");
       } catch (Exception e) {
         log.log(Level.SEVERE, "Failed to store package contents in Redis", e);
         System.exit(1);
@@ -107,7 +115,7 @@ public class App {
 
 
     Set<String> keys = redis.listKeys();
-    log.log(Level.INFO, "Starting to write files from Redis to disk.");
+    System.out.println("Starting to write files from Redis to disk.");
     startTime = new Date().getTime();
     try {
       for (String key : keys) {
@@ -122,8 +130,8 @@ public class App {
     }
     endTime = new Date().getTime();
     delta = endTime - startTime;
-    log.log(Level.INFO, "Finished writing files from Redis to disk.");
-    log.log(Level.INFO, "Writing files to disk took " + delta + " milliseconds.");
+    System.out.println("Finished writing files from Redis to disk.");
+    System.out.println("Writing files to disk took " + delta + " milliseconds.");
 
   }
 

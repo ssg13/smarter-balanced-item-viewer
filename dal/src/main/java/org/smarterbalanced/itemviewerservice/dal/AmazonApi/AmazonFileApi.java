@@ -31,7 +31,7 @@ import java.util.logging.Logger;
 
 
 public class AmazonFileApi {
-  private static final Logger log = Logger.getLogger(AmazonFileApi.class.getName());
+  private static final Logger log = Logger.getLogger("org.smarterbalanced.dal");
   private String bucketName;
   private AmazonS3 s3connection;
 

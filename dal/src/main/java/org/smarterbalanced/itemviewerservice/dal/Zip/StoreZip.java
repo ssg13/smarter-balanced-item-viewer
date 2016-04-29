@@ -22,7 +22,7 @@ import java.util.zip.ZipInputStream;
  * Class with methods for storing files in Redis and AWS S3 buckets.
  */
 public class StoreZip {
-  private static final Logger log = Logger.getLogger(StoreZip.class.getName());
+  private static final Logger log = Logger.getLogger("org.smarterbalanced.dal");
   /**
    * Unpack to bucket string.
    *

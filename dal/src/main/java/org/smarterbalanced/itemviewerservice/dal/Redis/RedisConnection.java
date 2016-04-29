@@ -15,7 +15,7 @@ import java.util.logging.Logger;
  * Store, fetch and delete objects from a Redis cache.
  */
 public class RedisConnection {
-  private static final Logger log = Logger.getLogger(RedisConnection.class.getName());
+  private static final Logger log = Logger.getLogger("org.smarterbalanced.dal");
   private JedisPool pool;
 
   /**
