@@ -6,16 +6,16 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
  * Store, fetch and delete objects from a Redis cache.
  */
 public class RedisConnection {
+  private static final Logger log = Logger.getLogger(RedisConnection.class.getName());
   private JedisPool pool;
 
   /**
@@ -47,6 +47,9 @@ public class RedisConnection {
     byte[] byteKey = key.getBytes();
 
     if (fileData.length > maxFileSize) {
+      log.log(Level.WARNING,
+              "File " + key + " is larger than 512 MB. Too large to store in Redis."
+      );
       throw new FileTooLargeException(String.format("File with key %s is larger than 512 MB", key));
     }
 
@@ -54,14 +57,14 @@ public class RedisConnection {
       jedis = this.pool.getResource();
       result = jedis.set(byteKey, fileData);
     } catch (JedisConnectionException e) {
-      System.err.println("ERROR: Failed to get a Redis connection from pool.");
+      log.log(Level.SEVERE, "Failed to open connection to Redis.", e);
       throw e;
     }
 
     jedis.close();
 
     if (!result.equals("OK")) {
-      System.err.println("ERROR: Failed to store file. Reason " + result);
+      log.log(Level.WARNING, "Failed to store file in Redis. Reason: " + result);
       throw new RedisFileException(String.format("Failed to store file with key: %s. "
               + "Reason: %s", key, result));
     }
@@ -84,7 +87,7 @@ public class RedisConnection {
    *
    * @param key      The key used to store the data in Redis.
    *                 If the key is already in Redis the data associated with it will be overwritten.
-   * @param fileData The data to store in Redis. Maximum file soze of 512 MB.
+   * @param fileData The data to store in Redis. Maximum file size of 512 MB.
    * @throws RedisFileException       if unable to store the file.
    * @throws JedisConnectionException if the Redis connection attempt fails.
    * @throws FileTooLargeException    if the file is larger than 512 MB.
@@ -104,12 +107,12 @@ public class RedisConnection {
       jedis = this.pool.getResource();
       result = jedis.set(key, fileData);
     } catch (JedisConnectionException e) {
-      System.err.println("ERROR: Failed to get a Redis connection from pool.");
+      log.log(Level.SEVERE, "Failed to open connection to Redis.", e);
       throw e;
     }
 
     if (!result.equals("OK")) {
-      System.err.println("ERROR: Failed to store file. Reason " + result);
+      log.log(Level.WARNING, "Failed to store file:" + key + "Reason" + result);
       throw new RedisFileException(String.format("Failed to store file with key: %s. "
               + "Reason: %s", key, result));
     }
@@ -138,13 +141,12 @@ public class RedisConnection {
       if (exists) {
         fileContents = jedis.get(byteKey);
       } else {
-        System.err.println("File with key " + key + " is not in Redis.");
+        log.log(Level.WARNING, "File with key " + key + " is not in Redis.");
         throw new RedisFileException("File with key " + key + " is not in Redis.");
       }
 
     } catch (JedisConnectionException e) {
-      System.err.println("ERROR: Failed to get a Redis connection from connection pool. "
-              + "Reason: " + e.getMessage());
+      log.log(Level.SEVERE, "Failed to open connection to Redis.", e);
       throw e;
     }
 
@@ -174,19 +176,20 @@ public class RedisConnection {
       if (exists) {
         result = jedis.del(key);
       } else {
-        System.err.println(String.format("File with key: %s not in Redis", key));
+        log.log(Level.INFO, "Attempted to delete file not in Redis. Key: " + key);
       }
 
     } catch (JedisConnectionException e) {
-      System.err.println("ERROR: Failed to connect to Redis. Reason " + e.getMessage());
+      log.log(Level.SEVERE, "Failed to open connection to Redis.", e);
       throw e;
     }
 
     jedis.close();
 
     if (result != 1L) {
-      System.err.println(String.format("ERROR: Failed to delete object with key: %s", key));
-      throw new RedisFileException(String.format("Failed to delete file with key: %s", key));
+      log.log(Level.WARNING, "Failed to delete file with key: " + key + " from Redis.");
+      throw new RedisFileException(String.format(
+              "Failed to delete file with key: %s from Redis.", key));
     }
   }
 }

@@ -26,10 +26,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class AmazonFileApi {
+  private static final Logger log = Logger.getLogger(AmazonFileApi.class.getName());
   private String bucketName;
   private AmazonS3 s3connection;
 
@@ -57,11 +59,10 @@ public class AmazonFileApi {
       }
 
     } catch (AmazonServiceException ase) {
-      System.err.println("Failed to create bucket");
+      log.log(Level.SEVERE, ase.toString(), ase);
       throw ase;
     } catch (AmazonClientException ace) {
-      System.err.println("ERROR: Network error connecting to Amazon S3.");
-      System.err.println("Error Message: " + ace.getMessage());
+      log.log(Level.SEVERE, ace.toString(), ace);
       throw ace;
     }
   }
@@ -86,16 +87,10 @@ public class AmazonFileApi {
         listObjectsRequest.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
     } catch (AmazonServiceException ase) {
-      System.err.println("ERROR: Amazon rejected the connection to S3.");
-      System.err.println("Error Message:    " + ase.getMessage());
-      System.err.println("HTTP Status Code: " + ase.getStatusCode());
-      System.err.println("AWS Error Code:   " + ase.getErrorCode());
-      System.err.println("Error Type:       " + ase.getErrorType());
-      System.err.println("Request ID:       " + ase.getRequestId());
+      log.log(Level.SEVERE, "Amazon rejected the connection to S3.", ase);
       throw ase;
     } catch (AmazonClientException ace) {
-      System.err.println("ERROR: Network error connecting to Amazon S3.");
-      System.err.println("Error Message: " + ace.getMessage());
+      log.log(Level.SEVERE, "Network error connecting to Amazon S3.");
       throw ace;
     }
     return keys;
@@ -135,16 +130,16 @@ public class AmazonFileApi {
       if (awsMD5.contains("-")) {
         awsMD5 = awsMD5.substring(0, 32);
       }
-      System.out.println("Zip MD5:  " + downloadMD5);
-      System.out.println("AWS ETag: " + awsMD5);
+      log.log(Level.INFO, "Zip MD5:  " + downloadMD5);
+      log.log(Level.INFO, "AWS ETag: " + awsMD5);
     } catch (IOException ex) {
-      System.err.println("Failed to open file stream with Amazon S3.");
+      log.log(Level.SEVERE, "Failed to open file stream with Amazon S3.", ex);
       throw ex;
     } catch (NullPointerException ex) {
-      System.err.println("Amazon S3 file stream is null");
+      log.log(Level.SEVERE, "Amazon S3 file stream is null", ex);
       throw ex;
     } catch (NoSuchAlgorithmException ex) {
-      System.err.println("MD5 checksum generation is not supported.");
+      log.log(Level.SEVERE, "MD5 checksum generation is not supported.", ex);
       throw ex;
     }
     return fileData;
@@ -162,7 +157,7 @@ public class AmazonFileApi {
     try {
       objectFileStream = object.getObjectContent();
     } catch (NullPointerException ex) {
-      System.err.println("Amazon S3 file stream is null");
+      log.log(Level.SEVERE, "Amazon S3 file stream is null", ex);
       throw ex;
     }
     if (objectFileStream == null) {
@@ -185,16 +180,10 @@ public class AmazonFileApi {
       this.s3connection.putObject(new PutObjectRequest(
               this.bucketName, key, fileStream, objectData));
     } catch (AmazonServiceException ase) {
-      System.err.println("Amazon rejected putObject request.");
-      System.err.println("Error Message:    " + ase.getMessage());
-      System.err.println("HTTP Status Code: " + ase.getStatusCode());
-      System.err.println("AWS Error Code:   " + ase.getErrorCode());
-      System.err.println("Error Type:       " + ase.getErrorType());
-      System.err.println("Request ID:       " + ase.getRequestId());
+      log.log(Level.SEVERE, "Amazon rejected putObject request.", ase);
       throw ase;
     } catch (AmazonClientException ace) {
-      System.err.println("ERROR: Network error connecting to Amazon S3.");
-      System.err.println("Error Message: " + ace.getMessage());
+      log.log(Level.SEVERE, "Network error connecting to Amazon S3.", ace);
       throw ace;
     }
   }

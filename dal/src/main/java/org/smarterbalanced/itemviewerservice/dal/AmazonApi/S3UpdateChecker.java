@@ -19,9 +19,12 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class S3UpdateChecker extends Thread {
+  private static final Logger log = Logger.getLogger(S3UpdateChecker.class.getName());
   private String queueUrl;
   private AmazonSQS sqs;
 
@@ -36,8 +39,7 @@ public class S3UpdateChecker extends Thread {
     try {
       credentials = new ProfileCredentialsProvider().getCredentials();
     } catch (Exception e) {
-      System.err.println("ERROR: Unable to load Amazon credentials. "
-          + "This will prevent connection to the Amazon API.");
+      log.log(Level.SEVERE, e.toString(), e);
       Thread.currentThread().interrupt();
       return;
     }
@@ -56,11 +58,9 @@ public class S3UpdateChecker extends Thread {
       ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(this.queueUrl);
       messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
     } catch (AmazonServiceException aex) {
-      System.err.format("ERROR: Amazon rejected message get request. "
-          + "Reason: %s%n", aex.getMessage());
+      log.log(Level.SEVERE, "Amazon message queue denied message get request.", aex);
     } catch (AmazonClientException aex) {
-      System.err.format("ERROR: Unable to communicate with the Amazon API. "
-          + "Reason: %s%n", aex.getMessage());
+      log.log(Level.SEVERE, "Failed to connect to Amazon message queue.", aex);
     }
     return messages;
   }
@@ -75,11 +75,9 @@ public class S3UpdateChecker extends Thread {
       try {
         sqs.deleteMessage(new DeleteMessageRequest(this.queueUrl, receipt));
       } catch (AmazonServiceException aex) {
-        System.err.format("ERROR: Amazon denied the request to delete the message. "
-            + "Reason: %s%n", aex.getErrorMessage());
+        log.log(Level.WARNING, "Failed to delete message from Amazon message queue.", aex);
       } catch (AmazonClientException aex) {
-        System.err.format("ERROR: Unable to communicate with the Amazon API. "
-            + "Reason: %s%n", aex.getMessage());
+        log.log(Level.SEVERE, "Failed to connect to Amazon message queue.", aex);
       }
     }
   }

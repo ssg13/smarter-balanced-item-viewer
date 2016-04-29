@@ -11,6 +11,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -20,6 +22,7 @@ import java.util.zip.ZipInputStream;
  * Class with methods for storing files in Redis and AWS S3 buckets.
  */
 public class StoreZip {
+  private static final Logger log = Logger.getLogger(StoreZip.class.getName());
   /**
    * Unpack to bucket string.
    *
@@ -44,7 +47,7 @@ public class StoreZip {
       }
       zipStream.close();
     } catch (IOException e) {
-      System.err.println("ERROR: Failed to store file: " + fileName + " in Amazon bucket");
+      log.log(Level.WARNING, "Failed to store file: " + fileName + " in Amazon bucket");
       throw e;
     }
     return bucketName;
@@ -74,13 +77,13 @@ public class StoreZip {
         }
       }
     } catch (IOException e) {
-      System.err.println("ERROR: File stream error.");
+      log.log(Level.SEVERE, "Error opening Zip file.", e);
       throw e;
     } catch (FileTooLargeException e) {
-      System.err.println("ERROR: File too large to store in Redis.");
+      log.log(Level.SEVERE, "File too large to store in Redis.", e);
       throw e;
     } catch (RedisFileException e) {
-      System.err.println("ERROR: Redis returned an error when attempting to store the file.");
+      log.log(Level.SEVERE, "Failed to store file in Redis.", e);
       throw e;
     }
   }
