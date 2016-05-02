@@ -110,6 +110,8 @@ public class AmazonFileApi {
     byte[] fileData;
     String awsMD5;
     String downloadMD5;
+    MessageDigest md5;
+    InputStream objectFileStream;
     S3Object object = getObject(key);
     ObjectMetadata objectMetadata = object.getObjectMetadata();
     long awsFileSize = objectMetadata.getContentLength();
@@ -119,19 +121,42 @@ public class AmazonFileApi {
     }
 
     try {
-      awsMD5 = object.getObjectMetadata().getETag();
-      MessageDigest md5 = MessageDigest.getInstance("MD5");
-      InputStream objectFileStream = object.getObjectContent();
+      awsMD5 = object.getObjectMetadata().getUserMetaDataOf("md5");
+      awsMD5 = awsMD5.replaceAll("\\s+",""); /* Strip any extra whitespace. */
+      if (awsMD5.length() != 32) {
+        log.log(Level.WARNING, "MD5 metadata for package " + key + " is not 32 characters.");
+      }
+      md5 = MessageDigest.getInstance("MD5");
+      objectFileStream = object.getObjectContent();
       DigestInputStream digestStream = new DigestInputStream(objectFileStream, md5);
       fileData = IOUtils.toByteArray(digestStream);
       downloadMD5 = Hex.encodeHexString(md5.digest());
       digestStream.close();
       objectFileStream.close();
-      if (awsMD5.contains("-")) {
-        awsMD5 = awsMD5.substring(0, 32);
+      if (!downloadMD5.equals(awsMD5)) { /* Retry the download. */
+        log.log(
+                Level.WARNING,
+                "First download attempt MD5 checksums for package " + key + " do not match.\n"
+                        + "Calculated MD5 checksum for download: " + downloadMD5 + "\n"
+                        + "MD5 checksum from Amazon S3 header:   " + awsMD5
+        );
+        object = getObject(key);
+        objectFileStream = object.getObjectContent();
+        digestStream = new DigestInputStream(objectFileStream, md5);
+        fileData = IOUtils.toByteArray(digestStream);
+        downloadMD5 = Hex.encodeHexString(md5.digest());
+        digestStream.close();
+        objectFileStream.close();
+        if (!downloadMD5.equals(awsMD5)) {
+          /* MD5 checksums still don't match. Log an error and continue. */
+          log.log(
+                  Level.WARNING,
+                  "Second download attempt MD5 checksums for package " + key + " do not match.\n"
+                          + "Calculated MD5 checksum for download: " + downloadMD5 + "\n"
+                          + "MD5 checksum from Amazon S3 header:   " + awsMD5
+          );
+        }
       }
-      log.log(Level.INFO, "Zip MD5:  " + downloadMD5);
-      log.log(Level.INFO, "AWS ETag: " + awsMD5);
     } catch (IOException ex) {
       log.log(Level.SEVERE, "Failed to open file stream with Amazon S3.", ex);
       throw ex;
