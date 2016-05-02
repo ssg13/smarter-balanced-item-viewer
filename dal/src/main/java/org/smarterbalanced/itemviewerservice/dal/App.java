@@ -16,21 +16,29 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The Application.
  */
 public class App {
-
+  private static final Logger log = Logger.getLogger("org.smarterbalanced.dal");
   /**
    * The entry point of application.
    *
    * @param args There are no input arguments needed.
    */
   public static void main(String[] args) {
+    try {
+      FileHandler logFile = new FileHandler("./dallog.log");
+      log.addHandler(logFile);
+    } catch (IOException e) {
+      log.log(Level.SEVERE, "Unable to create log file.");
+      System.exit(1);
+    }
     System.out.println("Starting redis storage example.");
-
-    String fileName = "";
     String packageBucket = "";
     List<String> packageKeys = null;
     AmazonFileApi amazonApi;
@@ -40,7 +48,6 @@ public class App {
     long startTime;
     long endTime;
     String path = System.getProperty("user.home") + "/sb-redis-example/";
-    ;
     Path workingDirectory = Paths.get(path);
     byte[] zip;
     byte[] fileData;
@@ -48,14 +55,13 @@ public class App {
     try {
       packageBucket = getConfigS3Bucket();
     } catch (IOException e) {
-      System.err.println("Failed to load configuration file.");
+      log.log(Level.SEVERE, "Failed to load configuration file.", e);
       System.exit(1);
     }
     amazonApi = new AmazonFileApi(packageBucket);
 
     try {
       packageKeys = amazonApi.getAllKeys();
-      fileName = packageKeys.get(0);
     } catch (Exception e) {
       System.exit(1);
     }
@@ -63,7 +69,7 @@ public class App {
     try {
       Files.createDirectories(workingDirectory);
     } catch (IOException e) {
-      System.err.println("Failed to create destination directory for zip file download.");
+      log.log(Level.SEVERE, "Failed to create destination directory for zip file download.", e);
       System.exit(1);
     }
 
@@ -86,8 +92,7 @@ public class App {
         System.out.println("Finished writing zip file to disk.");
         System.out.println("Writing zip file to disk took " + delta + " milliseconds.");
       } catch (Exception e) {
-        System.out.println("Error fetching files from S3.");
-        System.out.println(e.getMessage());
+        log.log(Level.SEVERE, "Error fetching files from S3.", e);
         System.exit(1);
       }
     }
@@ -103,8 +108,7 @@ public class App {
         System.out.println("Finished unzipping package contents to Redis.");
         System.out.println("Unpacking the zip file to Redis took " + delta + " milliseconds.");
       } catch (Exception e) {
-        System.err.println("Failed to store package contents in Redis");
-        System.err.println(e.getMessage());
+        log.log(Level.SEVERE, "Failed to store package contents in Redis", e);
         System.exit(1);
       }
     }
@@ -121,9 +125,7 @@ public class App {
         Files.write(workingDirectory, fileData);
       }
     } catch (Exception e) {
-      System.err.println("Failed to extract file from Redis to disk.");
-      System.err.println(e.getMessage());
-      e.printStackTrace();
+      log.log(Level.SEVERE, "Failed to extract file from Redis to disk.", e);
       System.exit(1);
     }
     endTime = new Date().getTime();
