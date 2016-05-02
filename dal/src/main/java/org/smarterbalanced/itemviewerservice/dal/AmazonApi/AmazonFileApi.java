@@ -134,8 +134,12 @@ public class AmazonFileApi {
       digestStream.close();
       objectFileStream.close();
       if (!downloadMD5.equals(awsMD5)) { /* Retry the download. */
-        log.log(Level.INFO,
-                "First download attempt MD5 checksums for package " + key + " do not match.");
+        log.log(
+                Level.WARNING,
+                "First download attempt MD5 checksums for package " + key + " do not match.\n"
+                        + "Calculated MD5 checksum for download: " + downloadMD5 + "\n"
+                        + "MD5 checksum from Amazon S3 header:   " + awsMD5
+        );
         object = getObject(key);
         objectFileStream = object.getObjectContent();
         digestStream = new DigestInputStream(objectFileStream, md5);
@@ -145,12 +149,14 @@ public class AmazonFileApi {
         objectFileStream.close();
         if (!downloadMD5.equals(awsMD5)) {
           /* MD5 checksums still don't match. Log an error and continue. */
-          log.log(Level.WARNING,
-                  "Second download attempt MD5 checksums for package " + key + " do not match.");
+          log.log(
+                  Level.WARNING,
+                  "Second download attempt MD5 checksums for package " + key + " do not match.\n"
+                          + "Calculated MD5 checksum for download: " + downloadMD5 + "\n"
+                          + "MD5 checksum from Amazon S3 header:   " + awsMD5
+          );
         }
       }
-      System.out.println("Zip MD5: " + downloadMD5);
-      System.out.println("AWS MD5: " + awsMD5);
     } catch (IOException ex) {
       log.log(Level.SEVERE, "Failed to open file stream with Amazon S3.", ex);
       throw ex;
