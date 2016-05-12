@@ -38,7 +38,6 @@ public class App {
       log.log(Level.SEVERE, "Unable to create log file.");
       System.exit(1);
     }
-    System.out.println("Starting redis storage example.");
     String packageBucket = "";
     List<String> packageKeys = null;
     AmazonFileApi amazonApi;
@@ -59,6 +58,23 @@ public class App {
       System.exit(1);
     }
     amazonApi = new AmazonFileApi(packageBucket);
+    S3UpdateChecker checker = new S3UpdateChecker(amazonApi);
+    checker.start();
+
+    Thread.State state;
+    for(;;) {
+      state = checker.getState();
+      System.out.println("State is " + state.toString());
+      try {
+        Thread.sleep(100000);
+      } catch (Exception e) {
+        //main thread crashed.
+      }
+    }
+
+    /*
+
+
 
     try {
       packageKeys = amazonApi.getAllKeys();
@@ -132,6 +148,7 @@ public class App {
     delta = endTime - startTime;
     System.out.println("Finished writing files from Redis to disk.");
     System.out.println("Writing files to disk took " + delta + " milliseconds.");
+    */
 
   }
 

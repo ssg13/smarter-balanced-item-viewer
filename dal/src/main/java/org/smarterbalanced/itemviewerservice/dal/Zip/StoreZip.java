@@ -86,6 +86,7 @@ public class StoreZip {
       log.log(Level.SEVERE, "Failed to store file in Redis.", e);
       throw e;
     }
+    zipFile.close();
   }
 
 }
