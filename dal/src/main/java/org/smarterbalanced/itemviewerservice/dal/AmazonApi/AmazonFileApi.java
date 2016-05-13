@@ -47,7 +47,7 @@ public class AmazonFileApi {
     this.s3connection.setEndpoint("s3-us-west-2.amazonaws.com");
   }
 
-  private S3Object getObject(String key) {
+  public S3Object getObject(String key) {
     S3Object object = s3connection.getObject(new GetObjectRequest(this.bucketName, key));
     return object;
   }

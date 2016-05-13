@@ -6,6 +6,8 @@ import org.smarterbalanced.itemviewerservice.dal.AmazonApi.AmazonFileApi;
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.RedisFileException;
 import org.smarterbalanced.itemviewerservice.dal.Redis.RedisConnection;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -53,6 +55,32 @@ public class StoreZip {
     return bucketName;
   }
 
+
+  /**
+   * Extracts and stores the contents of a zip file in Redis.
+   *
+   * @param path File path to the directory where the zip file is stored.
+   * @param fileName The name of the zip file on disk.
+   */
+  public static void unpackToRedisHash(String fileName, String path) throws Exception {
+    ZipFile zipFile = new ZipFile(path + "/" + fileName);
+    ZipEntry entry;
+    Enumeration<? extends ZipEntry> entries = zipFile.entries();
+    JedisPool pool = new JedisPool();
+    Jedis redis = pool.getResource();
+
+    while (entries.hasMoreElements()) {
+      entry = entries.nextElement();
+      if (!entry.isDirectory()) {
+        InputStream zipStream = zipFile.getInputStream(entry);
+        byte[] fileData = toByteArray(zipStream);
+        redis.hset(fileName.getBytes(), entry.getName().getBytes(), fileData);
+      }
+    }
+    zipFile.close();
+    redis.close();
+  }
+
   /**
    * Extracts and stores the contents of a zip file in Redis.
    *
@@ -86,6 +114,7 @@ public class StoreZip {
       log.log(Level.SEVERE, "Failed to store file in Redis.", e);
       throw e;
     }
+    zipFile.close();
   }
 
 }

@@ -1,108 +1,85 @@
 package org.smarterbalanced.itemviewerservice.dal.AmazonApi;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.PropertiesCredentials;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClient;
-import com.amazonaws.services.sqs.model.CreateQueueRequest;
-import com.amazonaws.services.sqs.model.DeleteMessageRequest;
-import com.amazonaws.services.sqs.model.DeleteQueueRequest;
-import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import org.smarterbalanced.itemviewerservice.dal.Redis.RedisConnection;
+import org.smarterbalanced.itemviewerservice.dal.Zip.StoreZip;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
-import java.util.Collections;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class S3UpdateChecker extends Thread {
-  private static final Logger log = Logger.getLogger(S3UpdateChecker.class.getName());
-  private String queueUrl;
-  private AmazonSQS sqs;
+/**
+ * The type S 3 update checker.
+ */
+public class S3UpdateChecker implements Runnable {
+  private static final Logger log = Logger.getLogger("org.smarterbalanced.dal");
+  private RedisConnection redis;
+  private AmazonFileApi awsbucket;
+  private JedisPool jedisPool;
+
 
   /**
-   * Creates a new instance of the S3UpdateChecker class.
-   * @param queueUrl URL of AWS Message Queue to watch
+   * Instantiates a new S3 update checker.
+   * This is a runnable object that polls the given S3 bucket for new or updated items.
+   * It only runs once, so it should be used with a ScheduledExecutorService.
+   * @param bucketName the Amazon S3 bucket to check for updates.
    */
-  public S3UpdateChecker(String queueUrl) {
-    AWSCredentials credentials;
-    this.queueUrl = queueUrl;
-    Region usWest2 = Region.getRegion(Regions.US_WEST_2);
-    try {
-      credentials = new ProfileCredentialsProvider().getCredentials();
-    } catch (Exception e) {
-      log.log(Level.SEVERE, e.toString(), e);
-      Thread.currentThread().interrupt();
-      return;
-    }
-    this.sqs = new AmazonSQSClient(credentials);
-    this.sqs.setRegion(usWest2);
-    this.sqs.setEndpoint("sdb.us-west-2.amazonaws.com");
+  public S3UpdateChecker(String bucketName) {
+    this.awsbucket = new AmazonFileApi(bucketName);
+    this.jedisPool = new JedisPool();
+    this.redis = new RedisConnection((this.jedisPool));
   }
 
-  /**
-   * Performs a GET request to AWS Message Queue.
-   * @return Updates from the Message Queue
-   */
-  private List<Message> pollForUpdates() {
-    List<Message> messages = Collections.emptyList();
-    try {
-      ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(this.queueUrl);
-      messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
-    } catch (AmazonServiceException aex) {
-      log.log(Level.SEVERE, "Amazon message queue denied message get request.", aex);
-    } catch (AmazonClientException aex) {
-      log.log(Level.SEVERE, "Failed to connect to Amazon message queue.", aex);
-    }
-    return messages;
+
+  private void updateContentPack(String key) throws Exception {
+    String path = System.getProperty("user.home");
+    String tempFile = path + "/" + key;
+    byte[] zip = this.awsbucket.getS3File(key);
+    FileOutputStream fos = new FileOutputStream(tempFile);
+    fos.write(zip);
+    fos.close();
+    StoreZip.unpackToRedisHash(key, path);
+    Files.delete(Paths.get(tempFile));
   }
 
-  /**
-   * Performs a DELETE request to AWS Message Queue.
-   * @param messages A list of messages to delete from the queue
-   */
-  private void removeFromQueue(List<Message> messages) {
-    for (Message message : messages) {
-      String receipt = message.getReceiptHandle();
-      try {
-        sqs.deleteMessage(new DeleteMessageRequest(this.queueUrl, receipt));
-      } catch (AmazonServiceException aex) {
-        log.log(Level.WARNING, "Failed to delete message from Amazon message queue.", aex);
-      } catch (AmazonClientException aex) {
-        log.log(Level.SEVERE, "Failed to connect to Amazon message queue.", aex);
+  private void checkForUpdate(String key) {
+    ObjectMetadata metadata = awsbucket.getObject(key).getObjectMetadata();
+    Jedis jedis = this.jedisPool.getResource();
+    try {
+      if (jedis.exists(key)) {
+        if (!(jedis.hget(key, "lastUpdate").equals(metadata.getLastModified().toString()))) {
+          log.log(Level.INFO, "Package " + key + " was updated. Fetching latest.");
+          updateContentPack(key);
+          jedis.hset(key, "lastUpdate", metadata.getLastModified().toString());
+        }
+      } else {
+        log.log(Level.INFO, "New package " + key + "found. Fetching.");
+        updateContentPack(key);
+        jedis.hset(key, "lastUpdate", metadata.getLastModified().toString());
       }
+    } catch (Exception e) {
+      log.log(Level.SEVERE, "Failed to update content package " + key, e);
+    } finally {
+      jedis.close();
     }
   }
 
   /**
-   * Periodically polls S3 for changes and triggers Redis updates when necessary.
+   * Fetches the metadata of all objects in a S3 bucket. Adds any new packages to Redis.
+   * Updates and packages already stored in Redis.
    */
   public void run() {
-    int sleepTime = 7000; //4 seconds
-    while (true) {
-      List<Message> messages = pollForUpdates();
-      /*
-      TODO: Act on new messages in the queue.
-      Once we have determined the best way to unpack and store packages
-      we need to use this to process new packages that are added to the S3 bucket
-      while the application is running.
-       */
-      try {
-        Thread.sleep(sleepTime);
-      } catch (InterruptedException e) {
-        //The thread was interrupted and should exit
-        Thread.currentThread().interrupt();
-        return;
-      }
+    log.log(Level.INFO, "Running scheduled check for new or updated S3 items.");
+    List<String> allKeys = this.awsbucket.getAllKeys();
+    for (String key : allKeys) {
+      checkForUpdate(key);
     }
+    log.log(Level.INFO, "Finished running scheduled check for new or updated S3 items.");
   }
-
 }
