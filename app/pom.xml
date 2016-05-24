@@ -52,6 +52,12 @@
       <artifactId>maven-javadoc-plugin</artifactId>
       <version>2.10.3</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.smarterbalanced.itemviewerservice.dal</groupId>
+      <artifactId>itemviewerservice.dal</artifactId>
+      <version>1.0</version>
+    </dependency>
   </dependencies>
 
   <build>
