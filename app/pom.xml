@@ -54,8 +54,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.smarterbalanced.itemviewerservice.dal</groupId>
-      <artifactId>itemviewerservice.dal</artifactId>
+      <groupId>org.smarterbalanced.itemviewerservice.core</groupId>
+      <artifactId>itemviewerservice.core</artifactId>
       <version>1.0</version>
     </dependency>
   </dependencies>

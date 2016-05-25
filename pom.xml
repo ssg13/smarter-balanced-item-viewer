@@ -15,8 +15,8 @@
   </properties>
 
   <modules>
-    <module>app</module>
     <module>core</module>
+    <module>app</module>
     <module>dal</module>
   </modules>
 
