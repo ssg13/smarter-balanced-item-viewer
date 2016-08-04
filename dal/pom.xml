@@ -16,6 +16,8 @@
     <checkstyle.config.location>google_checks.xml</checkstyle.config.location>
     <checkstyle.violationSeverity>info</checkstyle.violationSeverity>
     <checkstyle.violation.ignore>PackageName</checkstyle.violation.ignore>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
 
   <dependencies>
@@ -60,6 +62,12 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
       <version>1.10.65</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <version>1.7.2</version>
     </dependency>
 
   </dependencies>

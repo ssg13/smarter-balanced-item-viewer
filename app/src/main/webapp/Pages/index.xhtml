@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:tds="http://airast.org/jsfcustom"
+	xmlns:p="http://java.sun.com/jsf/passthrough">
+<h:head>
+	<!-- set character encoding -->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<title>IRiS</title>
+	<!-- Forces IE into standards mode -->
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+	<!-- Prevents scaling -->
+	<meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
+
+	<!-- Blackbox Config -->
+	<script type="text/javascript">
+		var blackboxConfig = {
+			container : 'testShell',
+			preventShowOnLoad : false
+		};
+	</script>
+	<!-- Blackbox Seed -->
+	<script type="text/javascript" src="#{itempreviewDefaultBacking.blackboxHandler}"></script>
+	<!-- Required by CTB -->
+
+	<tds:CSSLink href="~/IrisStyles/iris.css" media="screen" type="text/css" rel="stylesheet" />
+	<!-- Use our own JavaScript so we can subscribe to notifications when the blackbox has initialized.-->
+	<tds:ScriptLink source="~/Scripts/ItemViewerService.js" type="text/javascript"></tds:ScriptLink>
+	<!-- Use the iris scripts xml file because it loads all of the JS we need for the accommodations. -->
+	<tds:ResourcesLink file="~/Scripts/scripts_iris.xml" name="sample" />
+</h:head>
+<h:body>
+	<div id="testShell"></div>
+</h:body>
+</html>

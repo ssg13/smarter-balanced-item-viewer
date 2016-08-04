@@ -10,6 +10,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
@@ -25,6 +26,23 @@ import java.util.zip.ZipInputStream;
  */
 public class StoreZip {
   private static final Logger log = Logger.getLogger("org.smarterbalanced.dal");
+
+  /**
+  * Convert long to int, or throw an exception if the lon is too large to convert.
+   *
+   * @param size The long to be converted.
+   *
+   * @return An integer representation of the long that was passed in.
+   */
+  private static int getIntSize(long size) throws FileTooLargeException {
+    if (size > Integer.MAX_VALUE) {
+      throw new FileTooLargeException("Error converting long to int. "
+              + "Long value is too large to store in an int.");
+    }
+    Long number = size;
+    return number.intValue();
+  }
+
   /**
    * Unpack to bucket string.
    *
@@ -41,7 +59,8 @@ public class StoreZip {
     AmazonFileApi amazonApi = new AmazonFileApi(bucketName);
     try {
       while ((entry = zipStream.getNextEntry()) != null) {
-        size = Math.toIntExact(entry.getSize());
+        //No math to int exact in Java 7. We have to check if the value is > int max.
+        size = getIntSize(entry.getSize());
         byte[] fileData = new byte[size];
         zipStream.read(fileData);
         InputStream entryStream = new ByteArrayInputStream(fileData);
@@ -51,6 +70,8 @@ public class StoreZip {
     } catch (IOException e) {
       log.log(Level.WARNING, "Failed to store file: " + fileName + " in Amazon bucket");
       throw e;
+    } catch (FileTooLargeException e) {
+      log.log(Level.WARNING, "Failed to transfer file: " + fileName + " Reason: " + e.getMessage());
     }
     return bucketName;
   }
@@ -98,7 +119,7 @@ public class StoreZip {
       while (entries.hasMoreElements()) {
         entry = entries.nextElement();
         if (!entry.isDirectory()) {
-          size = Math.toIntExact(entry.getSize());
+          size = getIntSize(entry.getSize());
           InputStream zipStream = zipFile.getInputStream(entry);
           byte[] fileData = toByteArray(zipStream);
           redis.storeByteFile(entry.getName(), fileData);

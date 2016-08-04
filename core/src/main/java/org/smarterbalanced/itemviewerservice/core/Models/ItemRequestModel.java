@@ -1,50 +1,80 @@
 package org.smarterbalanced.itemviewerservice.core.Models;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Models an item request.
  */
 public class ItemRequestModel {
-  private final String itemId;
-  private final String itemBank;
+
+  private final String item;
   private final String[] featureCodes;
+  private List<AccommodationModel> accommodations;
+  private static final Logger _logger = LoggerFactory.getLogger(ItemRequestModel.class);
 
   /**
    * Instantiates a new Item model.
    *
-   * @param itemId           item id
-   * @param itemBank         item bank
+   * @param item         The item requested
    * @param featureCodes Accessibility feature codes
    */
-  public ItemRequestModel(String itemId, String itemBank, String[] featureCodes) {
-    this.itemId = itemId;
-    this.itemBank = itemBank;
+  public ItemRequestModel(String item, String[] featureCodes) {
+    this.item = item;
     this.featureCodes = featureCodes;
+    this.accommodations = new ArrayList<>();
+  }
+
+  private void buildAccommodations() {
+    HashMap<String, List<String>> accomms = new HashMap<>();
+    for (String code: this.featureCodes) {
+      String type = AccommodationTypeLookup.getType(code);
+      //If type is null then the accommodation is not found. Do not add it to the list.
+      _logger.info("Unknown accommodation code requested for item " + this.item + " code: " + code);
+      if (type != null) {
+        if (accomms.containsKey(type)) {
+          List<String> accomCodes = accomms.get(type);
+          accomCodes.add(code);
+          accomms.put(type, accomCodes);
+        } else {
+          List<String> accomCodes = new ArrayList<String>();
+          accomCodes.add(code);
+          accomms.put(type, accomCodes);
+        }
+      }
+    }
+    for (Map.Entry<String, List<String>> entry: accomms.entrySet()) {
+      String type = entry.getKey();
+      List<String> codes = entry.getValue();
+      AccommodationModel accommodation = new AccommodationModel(type, codes);
+      this.accommodations.add(accommodation);
+    }
   }
 
   /**
-   * Gets id.
+   * Generate a json representation of the requested item and accommodations.
+   * The token is in the format taken by the blackbox javascript.
    *
-   * @return the item id for the request
+   * @return the Json token as a string
    */
-  public String getId() {
-    return this.itemId;
-  }
-
-  /**
-   * Gets bank.
-   *
-   * @return the item bank
-   */
-  public String getBank() {
-    return this.itemBank;
-  }
-
-  /**
-   * Get accessibility feature codes.
-   *
-   * @return the feature codes for the request.
-   */
-  public String[] getFeatureCodes() {
-    return this.featureCodes;
+  public String generateJsonToken() {
+    ObjectMapper mapper = new ObjectMapper();
+    buildAccommodations();
+    String json;
+    TokenModel token = new TokenModel(this.item, this.accommodations);
+    try {
+      json = mapper.writer().writeValueAsString(token);
+    } catch (Exception e) {
+      _logger.error(e.getMessage());
+      return "";
+    }
+    return json;
   }
 }
+

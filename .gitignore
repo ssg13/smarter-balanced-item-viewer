@@ -2,6 +2,7 @@
 target/
 *.ser
 *.ec
+overlays/
 
 # IntelliJ Idea
 .idea/

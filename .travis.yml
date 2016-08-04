@@ -2,7 +2,7 @@ language: java
 services:
 - redis-server
 jdk:
-- oraclejdk8
+- oraclejdk7
 script:
 - mvn checkstyle:check
 - mvn clean install
