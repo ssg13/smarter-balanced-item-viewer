@@ -21,18 +21,69 @@
   </properties>
 
   <dependencies>
-    <!-- JUnit-->
+    <dependency>
+      <groupId>org.smarterbalanced.itemviewerservice.dal</groupId>
+      <artifactId>itemviewerservice.dal</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <!-- JUnit -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.12</version>
       <scope>test</scope>
+    </dependency>
+
+    <!-- For mock objects in tests -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>1.10.19</version>
+    </dependency>
+
+    <!-- Operating System Info -->
+    <dependency>
+      <groupId>com.github.dblock</groupId>
+      <artifactId>oshi-core</artifactId>
+      <version>2.6-m-java7</version>
+    </dependency>
+
+    <!-- Amazon API -->
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-s3</artifactId>
+      <version>1.10.65</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-core</artifactId>
+      <version>1.10.65</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk</artifactId>
+      <version>1.10.65</version>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <version>1.7.2</version>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.7</version>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>1.0.13</version>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.0.13</version>
     </dependency>
 
     <dependency>

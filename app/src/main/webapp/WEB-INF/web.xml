@@ -64,6 +64,10 @@
         <servlet-name>itemviewerservice</servlet-name>
         <url-pattern>/item/*</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>itemviewerservice</servlet-name>
+        <url-pattern>/status</url-pattern>
+    </servlet-mapping>
     <servlet>
         <servlet-name>rendererServlet</servlet-name>
         <servlet-class>tds.itemrenderer.webcontrols.rendererservlet.RendererServlet</servlet-class>

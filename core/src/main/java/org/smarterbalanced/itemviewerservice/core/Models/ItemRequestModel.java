@@ -17,7 +17,7 @@ public class ItemRequestModel {
   private final String item;
   private final String[] featureCodes;
   private List<AccommodationModel> accommodations;
-  private static final Logger _logger = LoggerFactory.getLogger(ItemRequestModel.class);
+  private static final Logger logger = LoggerFactory.getLogger(ItemRequestModel.class);
 
   /**
    * Instantiates a new Item model.
@@ -36,7 +36,6 @@ public class ItemRequestModel {
     for (String code: this.featureCodes) {
       String type = AccommodationTypeLookup.getType(code);
       //If type is null then the accommodation is not found. Do not add it to the list.
-      _logger.info("Unknown accommodation code requested for item " + this.item + " code: " + code);
       if (type != null) {
         if (accomms.containsKey(type)) {
           List<String> accomCodes = accomms.get(type);
@@ -47,6 +46,9 @@ public class ItemRequestModel {
           accomCodes.add(code);
           accomms.put(type, accomCodes);
         }
+      } else {
+        logger.info("Unknown accommodation code requested for item " + this.item + " code: "
+                + code);
       }
     }
     for (Map.Entry<String, List<String>> entry: accomms.entrySet()) {
@@ -71,7 +73,7 @@ public class ItemRequestModel {
     try {
       json = mapper.writer().writeValueAsString(token);
     } catch (Exception e) {
-      _logger.error(e.getMessage());
+      logger.error(e.getMessage());
       return "";
     }
     return json;
