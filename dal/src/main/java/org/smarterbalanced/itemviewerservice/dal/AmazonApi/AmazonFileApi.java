@@ -2,73 +2,67 @@ package org.smarterbalanced.itemviewerservice.dal.AmazonApi;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
+import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.util.IOUtils;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smarterbalanced.itemviewerservice.dal.Config.SettingsReader;
 import org.smarterbalanced.itemviewerservice.dal.Exceptions.FileTooLargeException;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
+/**
+ * The type Amazon file api.
+ */
 public class AmazonFileApi {
-  private static final Logger log = Logger.getLogger("org.smarterbalanced.dal");
+  private static final Logger logger = LoggerFactory.getLogger(AmazonFileApi.class);
   private String bucketName;
   private AmazonS3 s3connection;
 
   /**
    * Creates a new instance of AmazonFileApi class.
-   * @param bucketName Name of the S3 bucket to connect to
    */
-  public AmazonFileApi(String bucketName) {
-    this.bucketName = bucketName;
+  public AmazonFileApi() {
+    this.bucketName = SettingsReader.get("S3bucket");
     this.s3connection = new AmazonS3Client();
-    Region usWest2 = Region.getRegion(Regions.US_WEST_2);
-    this.s3connection.setRegion(usWest2);
-    this.s3connection.setEndpoint("s3-us-west-2.amazonaws.com");
+    String region = SettingsReader.get("S3region");
+    this.s3connection.setRegion(RegionUtils.getRegion(region));
   }
 
+  /**
+   * Gets object.
+   *
+   * @param key the key for an item in the AWS S3 bucket
+   * @return S3 object
+   */
   public S3Object getObject(String key) {
     S3Object object = s3connection.getObject(new GetObjectRequest(this.bucketName, key));
     return object;
   }
 
-  private void createBucket(String bucketName) {
-    try {
-      if (!(this.s3connection.doesBucketExist(bucketName))) {
-        this.s3connection.createBucket(new CreateBucketRequest(bucketName));
-      }
-
-    } catch (AmazonServiceException ase) {
-      log.log(Level.SEVERE, ase.toString(), ase);
-      throw ase;
-    } catch (AmazonClientException ace) {
-      log.log(Level.SEVERE, ace.toString(), ace);
-      throw ace;
-    }
-  }
-
   /**
    * Lists all objects in the S3 bucket.
+   *
    * @return List of all objects in the S3 bucket
    */
   public List<String> getAllKeys() {
@@ -87,26 +81,58 @@ public class AmazonFileApi {
         listObjectsRequest.setMarker(objectListing.getNextMarker());
       } while (objectListing.isTruncated());
     } catch (AmazonServiceException ase) {
-      log.log(Level.SEVERE, "Amazon rejected the connection to S3.", ase);
+      logger.error("Amazon rejected the connection to S3.", ase);
       throw ase;
     } catch (AmazonClientException ace) {
-      log.log(Level.SEVERE, "Network error connecting to Amazon S3.");
+      logger.error("Network error connecting to Amazon S3.");
       throw ace;
     }
     return keys;
   }
 
   /**
+   * Gets the the timestamps for items in the AWS S3 bucket.
+   *
+   * @return a hashmap with the key the package name and the value the last updated time stamp
+   */
+  public HashMap<String, String> getContentLastUpdated() {
+    HashMap<String, String> packageTimestamps = new HashMap<>();
+
+    try {
+      ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+              .withBucketName(this.bucketName);
+      ObjectListing objectListing;
+      do {
+        objectListing = s3connection.listObjects(listObjectsRequest);
+        for (S3ObjectSummary objectSummary :
+                objectListing.getObjectSummaries()) {
+          packageTimestamps.put(objectSummary.getKey(), objectSummary.getLastModified().toString());
+        }
+        listObjectsRequest.setMarker(objectListing.getNextMarker());
+      } while (objectListing.isTruncated());
+    } catch (AmazonServiceException ase) {
+      logger.error("Amazon rejected the connection to S3.", ase);
+      throw ase;
+    } catch (AmazonClientException ace) {
+      logger.error("Network error connecting to Amazon S3.");
+      throw ace;
+    }
+    return packageTimestamps;
+  }
+
+  /**
    * Synchronously downloads a file from S3.
+   *
    * @param key The key of the S3 object to download
    * @return Byte array of file
-   * @throws FileTooLargeException Throws if file is over 2GB
-   * @throws IOException Throws for connection errors with S3
-   * @throws NullPointerException Throws when file pointer fails to initialize
+   * @throws FileTooLargeException    Throws if file is over 2GB
+   * @throws IOException              Throws for connection errors with S3
+   * @throws NullPointerException     Throws when file pointer fails to initialize
+   * @throws NoSuchAlgorithmException the no such algorithm exception
    */
   public byte[] getS3File(String key)
           throws FileTooLargeException, IOException, NullPointerException,
-      NoSuchAlgorithmException {
+          NoSuchAlgorithmException {
     byte[] fileData;
     String awsMD5;
     String downloadMD5;
@@ -122,9 +148,9 @@ public class AmazonFileApi {
 
     try {
       awsMD5 = object.getObjectMetadata().getUserMetaDataOf("md5");
-      awsMD5 = awsMD5.replaceAll("\\s+",""); /* Strip any extra whitespace. */
+      awsMD5 = awsMD5.replaceAll("\\s+", ""); /* Strip any extra whitespace. */
       if (awsMD5.length() != 32) {
-        log.log(Level.WARNING, "MD5 metadata for package " + key + " is not 32 characters.");
+        logger.warn("MD5 metadata for package " + key + " is not 32 characters.");
       }
       md5 = MessageDigest.getInstance("MD5");
       objectFileStream = object.getObjectContent();
@@ -134,8 +160,7 @@ public class AmazonFileApi {
       digestStream.close();
       objectFileStream.close();
       if (!downloadMD5.equals(awsMD5)) { /* Retry the download. */
-        log.log(
-                Level.WARNING,
+        logger.warn(
                 "First download attempt MD5 checksums for package " + key + " do not match.\n"
                         + "Calculated MD5 checksum for download: " + downloadMD5 + "\n"
                         + "MD5 checksum from Amazon S3 header:   " + awsMD5
@@ -149,8 +174,7 @@ public class AmazonFileApi {
         objectFileStream.close();
         if (!downloadMD5.equals(awsMD5)) {
           /* MD5 checksums still don't match. Log an error and continue. */
-          log.log(
-                  Level.WARNING,
+          logger.warn(
                   "Second download attempt MD5 checksums for package " + key + " do not match.\n"
                           + "Calculated MD5 checksum for download: " + downloadMD5 + "\n"
                           + "MD5 checksum from Amazon S3 header:   " + awsMD5
@@ -158,59 +182,107 @@ public class AmazonFileApi {
         }
       }
     } catch (IOException ex) {
-      log.log(Level.SEVERE, "Failed to open file stream with Amazon S3.", ex);
+      logger.error("Failed to open file stream with Amazon S3.", ex);
       throw ex;
     } catch (NullPointerException ex) {
-      log.log(Level.SEVERE, "Amazon S3 file stream is null", ex);
+      logger.error("Amazon S3 file stream is null", ex);
       throw ex;
     } catch (NoSuchAlgorithmException ex) {
-      log.log(Level.SEVERE, "MD5 checksum generation is not supported.", ex);
+      logger.warn("MD5 checksum generation is not supported.", ex);
       throw ex;
     }
     return fileData;
   }
 
   /**
+   * Write s 3 file to disk.
+   *
+   * @param key      the key for the file in the S3 bucket
+   * @param location the location on the local file system to write the file too
+   * @throws FileTooLargeException    the file is too large to download
+   * @throws IOException              Unable to download the file due to IO errors
+   * @throws NullPointerException     One of the file streams is null
+   * @throws NoSuchAlgorithmException Unable to generate the MD5 sum for the file
+   */
+  public void writeS3FileToDisk(String key, String location) throws FileTooLargeException,
+          IOException, NullPointerException, NoSuchAlgorithmException {
+    String awsMD5;
+    String downloadMD5;
+    MessageDigest md5;
+    InputStream objectFileStream;
+    OutputStream outputStream;
+    String outputPath = location + "/" + key;
+    S3Object object = getObject(key);
+    try {
+      outputStream = new FileOutputStream(outputPath);
+      awsMD5 = object.getObjectMetadata().getUserMetaDataOf("md5");
+      awsMD5 = awsMD5.replaceAll("\\s+", ""); /* Strip any extra whitespace. */
+      if (awsMD5.length() != 32) {
+        logger.warn("MD5 metadata for package " + key + " is not 32 characters.");
+      }
+      md5 = MessageDigest.getInstance("MD5");
+      objectFileStream = object.getObjectContent();
+      DigestInputStream digestStream = new DigestInputStream(objectFileStream, md5);
+      IOUtils.copy(digestStream, outputStream);
+      downloadMD5 = Hex.encodeHexString(md5.digest());
+      digestStream.close();
+      objectFileStream.close();
+      outputStream.close();
+      if (!downloadMD5.equals(awsMD5)) { /* Retry the download. */
+        logger.warn(
+                "First download attempt MD5 checksums for package " + key + " do not match.\n"
+                        + "Calculated MD5 checksum for download: " + downloadMD5 + "\n"
+                        + "MD5 checksum from Amazon S3 header:   " + awsMD5
+        );
+        object = getObject(key);
+        outputStream = new FileOutputStream(outputPath);
+        objectFileStream = object.getObjectContent();
+        digestStream = new DigestInputStream(objectFileStream, md5);
+        IOUtils.copy(digestStream, outputStream);
+        downloadMD5 = Hex.encodeHexString(md5.digest());
+        digestStream.close();
+        objectFileStream.close();
+        if (!downloadMD5.equals(awsMD5)) {
+          /* MD5 checksums still don't match. Log an error and continue. */
+          logger.warn(
+                  "Second download attempt MD5 checksums for package " + key + " do not match.\n"
+                          + "Calculated MD5 checksum for download: " + downloadMD5 + "\n"
+                          + "MD5 checksum from Amazon S3 header:   " + awsMD5
+          );
+        }
+      }
+    } catch (IOException ex) {
+      logger.error("Failed to open file stream with Amazon S3.", ex);
+      throw ex;
+    } catch (NullPointerException ex) {
+      logger.error("Amazon S3 file stream is null", ex);
+      throw ex;
+    } catch (NoSuchAlgorithmException ex) {
+      logger.warn("MD5 checksum generation is not supported.", ex);
+    }
+
+  }
+
+  /**
    * Gets a file stream from an object in a S3 bucket.
+   *
    * @param key The name of the object to download
    * @return InputStream object representing a file stream of an S3 object
    * @throws NullPointerException Throws if fileStream cannot be initialized
-     */
+   */
   public InputStream getS3FileStream(String key) throws NullPointerException {
     InputStream objectFileStream;
     S3Object object = getObject(key);
     try {
       objectFileStream = object.getObjectContent();
     } catch (NullPointerException ex) {
-      log.log(Level.SEVERE, "Amazon S3 file stream is null", ex);
+      logger.error("Amazon S3 file stream is null", ex);
       throw ex;
     }
     if (objectFileStream == null) {
       throw new NullPointerException("AWS file stream is null.");
     }
     return objectFileStream;
-  }
-
-  /**
-   * Store file.
-   *
-   * @param fileStream Input stream for the ZipFile
-   * @param key        Key to use when storing the file
-   * @param size       File size in bytes
-   */
-  public void storeFile(InputStream fileStream, String key, long size) {
-    ObjectMetadata objectData = new ObjectMetadata();
-    objectData.setContentLength(size);
-    try {
-      this.s3connection.putObject(new PutObjectRequest(
-              this.bucketName, key, fileStream, objectData));
-    } catch (AmazonServiceException ase) {
-      log.log(Level.SEVERE, "Amazon rejected putObject request.", ase);
-      throw ase;
-    } catch (AmazonClientException ace) {
-      log.log(Level.SEVERE, "Network error connecting to Amazon S3.", ace);
-      throw ace;
-    }
   }
 
 }

@@ -73,29 +73,6 @@ class BaseDiagnostic {
   }
 
   /**
-   * Read content path string.
-   *
-   * @return the iris content path as a string
-   * @throws IOException                  io exception loading config files
-   * @throws ParserConfigurationException parser configuration exception
-   * @throws URISyntaxException           uri syntax exception
-   * @throws XPathExpressionException     xpath expression exception
-   * @throws SAXException                 sax exception
-   */
-  String readContentPath() throws IOException, ParserConfigurationException,
-          URISyntaxException, XPathExpressionException, SAXException {
-    URL resource = DiagnosticApi.class.getResource("/settings-mysql.xml");
-    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder builder = factory.newDocumentBuilder();
-    Document doc = builder.parse(resource.toURI().toString());
-    XPathFactory pathFactory = XPathFactory.newInstance();
-    XPath path = pathFactory.newXPath();
-    XPathExpression contentPathExpr = path.compile("//entry[@key=\"iris.ContentPath\"]");
-    NodeList nodeList = (NodeList) contentPathExpr.evaluate(doc, XPathConstants.NODESET);
-    return nodeList.item(0).getTextContent();
-  }
-
-  /**
    * Lookup the status text that corresponds with the given status rating.
    *
    * @param statusRating the status rating

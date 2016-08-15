@@ -49,6 +49,14 @@
       <version>2.6-m-java7</version>
     </dependency>
 
+    <!-- For making HTTP requests to reload the content -->
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.2</version>
+    </dependency>
+
+
     <!-- Amazon API -->
     <dependency>
       <groupId>com.amazonaws</groupId>

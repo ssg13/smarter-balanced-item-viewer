@@ -62,6 +62,13 @@
       <artifactId>aws-java-sdk</artifactId>
       <version>1.10.65</version>
     </dependency>
+
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.4</version>
+    </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>

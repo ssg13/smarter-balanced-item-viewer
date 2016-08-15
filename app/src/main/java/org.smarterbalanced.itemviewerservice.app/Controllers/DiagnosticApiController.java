@@ -18,6 +18,8 @@ import javax.servlet.http.HttpServletRequest;
 @Controller
 public class DiagnosticApiController {
 
+
+
   /**
    * Diagnostics response entity.
    *

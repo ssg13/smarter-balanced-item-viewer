@@ -52,7 +52,7 @@ class ConfigurationDiagnostic extends BaseDiagnostic {
 
   private void validateContentPath() {
     try {
-      String path = readContentPath();
+      String path = SettingsReader.readIrisContentPath();
       if (contentPath != null) {
         this.contentPath = path;
       }

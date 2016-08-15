@@ -2,6 +2,7 @@ package org.smarterbalanced.itemviewerservice.core.DiagnosticApi;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smarterbalanced.itemviewerservice.dal.Config.SettingsReader;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +48,7 @@ class DatabaseDiagnostic extends BaseDiagnostic {
   DatabaseDiagnostic() {
     this.errors = new ArrayList<>();
     try {
-      this.contentPath = readContentPath();
+      this.contentPath = SettingsReader.readIrisContentPath();
     } catch (Exception e) {
       addError("Unable to load configuration file required to connect to content database.");
       addError("No further diagnostics can be run on the content database until the configuration"
