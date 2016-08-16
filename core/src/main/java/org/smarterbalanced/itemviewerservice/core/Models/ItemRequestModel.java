@@ -3,7 +3,9 @@ package org.smarterbalanced.itemviewerservice.core.Models;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smarterbalanced.itemviewerservice.dal.Config.SettingsReader;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +31,18 @@ public class ItemRequestModel {
     this.item = item;
     this.featureCodes = featureCodes;
     this.accommodations = new ArrayList<>();
+  }
+
+  private Boolean itemExists() {
+    String irisContentPath;
+    try {
+      irisContentPath = SettingsReader.readIrisContentPath();
+    } catch (Exception e) {
+      logger.warn("Unable to load iris content path");
+      return false;
+    }
+    File item = new File(irisContentPath + "/" + "Items" );
+    return false;
   }
 
   private void buildAccommodations() {

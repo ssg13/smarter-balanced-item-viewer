@@ -184,6 +184,10 @@
         setAccommodations(token);
         return $.post(url, token, null, 'text').then(function (data) {
             return loadContent(data);
+        }, function (data) {
+            window.alert("Unable to load item.\n" +
+                "Please make sure you entered the correct bank and item numbers.")
+
         });
     }
 

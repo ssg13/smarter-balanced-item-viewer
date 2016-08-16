@@ -103,6 +103,18 @@
 
         <dependency>
             <groupId>org.opentestsystem.delivery</groupId>
+            <artifactId>student.library</artifactId>
+            <version>0.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.opentestsystem.delivery</groupId>
             <artifactId>iris</artifactId>
             <version>0.0.1</version>
             <type>war</type>
