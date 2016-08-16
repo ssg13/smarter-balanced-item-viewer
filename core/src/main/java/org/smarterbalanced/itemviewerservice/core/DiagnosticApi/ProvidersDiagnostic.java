@@ -146,14 +146,13 @@ class ProvidersDiagnostic extends BaseDiagnostic {
     try {
       URL url = new URL(baseUrl + "/item/0-0");
       Integer status = getHttpStatus(url);
-      if (status != 200) {
-        this.irisStatus = status;
-        addError("Item viewer service API returned non 200 HTTP status code. HTTP code: "
-                + status.toString());
-        logger.error("Item viewer service API returned non 200 HTTP status code. HTTP code: "
-                + status.toString());
+      if (status == 200 || status == 404) {
+        this.irisStatus = 200;
       } else {
         this.irisStatus = status;
+        addError("Item viewer service API ");
+        logger.error("Item viewer service API returned a failing HTTP status code. HTTP code: "
+                + status.toString());
       }
     } catch (IOException e) {
       addError("An I/O error occurred when trying to connect to the item viewer service API. "
@@ -184,17 +183,18 @@ class ProvidersDiagnostic extends BaseDiagnostic {
 
   private void validateWordListHandler(String baseUrl) {
     try {
-      String urlParams = "?bankKey=187&itemKey=1653&index=1&TDS_ACCS=TDS_WL_Glossary";
+      String urlParams = "?bankKey=0&itemKey=0&index=1&TDS_ACCS=TDS_WL_Glossary";
       URL url = new URL(baseUrl + "/Pages/API/WordList.axd/resolve" + urlParams);
       Integer status = getHttpStatus(url);
-      if (status != 200) {
+      if (status == 200 || status == 500) {
+        this.wordListHandlerStatus = 200;
+      } else {
+
         this.wordListHandlerStatus = status;
         addError("Item viewer service word list handler dependency returned"
-                + " a non 200 http status code. HTTP code: " + status.toString());
+                + " a failing http status code. HTTP code: " + status.toString());
         logger.error("Item viewer service word list handler dependency returned"
-                + " a non 200 http status code. HTTP code: " + status.toString());
-      } else {
-        this.wordListHandlerStatus = status;
+                + " a failing http status code. HTTP code: " + status.toString());
       }
     } catch (IOException e) {
       addError("An I/O error occurred when trying to connect to the word list handler API "
