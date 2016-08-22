@@ -1,17 +1,39 @@
 # Item Viewer Service
 
-The item viewer service uses the Iris as a Maven WAR overlay to extend the scripts, styling and functionality of the Iris. The Iris application displays a window for users where they can enter which item and accommodations they wish to load. The item and accommodations are loaded in an iFrame embedded in the page where users specify which item and accommodations they want. The iFrame with the items and accommodations is the front end part of the Iris that the item viewer service displays to users.
+The item viewer service uses the Iris as a Maven WAR overlay to extend the scripts, styling and functionality of the Iris application.
+The Iris application displays a window for users where they can enter which item and accommodations they wish to load. The item and accommodations are loaded in an iFrame embedded in the page where users specify which item and accommodations they want.
+The iFrame with the items and accommodations is the front end part of the Iris that the item viewer service displays to users.
 
 The item viewer service excludes some files from the Iris WAR overlay. It excludes the Iris web.xml file because it requires different servlet mappings. It excludes the JNA 3.0.9 jar because it causes a dependency conflict with the Operating System Hardware Information library which depends on JNA 4.2.2. Finally it excludes the IrisPages directory because it does not need the page templates it contains.
 
-The item viewer service extends the Iris by adding its own controllers to
+The item viewer service extends the Iris application by adding its own controllers for loading items and accommodations by URL, and the diagnostic API.
+In the backend it adds the diagnostic API logic, accommodation code to type lookup, and a service that fetches content packages from Amazon Web Services S3.
 
 ## Item Viewer Service Modules
-The Item Viewer service is divided into three layers, the App, the Core and the Data Access Layer or dal.
+The Item Viewer service is divided into three layers, the App, the Core, and the Data Access Layer or dal.
 Each layer is a Maven submodule that is part of the main Item Viewer Service Maven application.
 
 ### App
-The App module has the web application frontend parts. It contains the web application controllers, JavaScript, page templates, and application configuration files.
+The App module has the web application frontend parts and application configuration. It contains the web application controllers, JavaScript, page templates, and application configuration files.
+
+#### Spring
+Spring is used for controllers and scheduled services. The item viewer service uses a mixture of xml and annotation configuration for Spring. Controllers use the `@RequestMapping` annotation to map the items and diagnostic API URLs. The item viewer service servlet is configured with xml and used to map the item page template directory and .jsp file extension.
+
+
+The controller for loading items is mapped to `/item/itemID`.
+The item ID must match the regex `d+[-]d+`, that is one or more numbers, a dash, and one or more numbers in that order.
+Optional accommodations are specified with the URL parameter ISAAP and are semicolon delimited. Only the accommodation code should be specified. Accommodation type is not specified.
+For example, the URL to load item 200-12344 would look like   http://viewer.smarterbalanced.org/item/200-12344?isaap=TDS_BC_ECN;TDS_WL_Glossary.
+
+
+The diagnostic API is mapped to /status per the specifications listed in the
+
+The service that polls Amazon Web Services S3 for updated content packages and downloads them to the local file system is run as a Spring scheduled service.
+It is configured with annotations to run every 5 minutes after the previous run of the service has finished.
+
+#### JavaScript
+The item viewer service replaces the Iris frontend JavaScript that was designed to allow users to load items without reloading the page with a lighter script that only needs to load one item.
+It uses XDM listeners to
 
 ### Core
 The Core module contains the application's business logic. It contains the diagnostic API, item request processing logic, and the tool that checks for updated content packages on Amazon S3.
