@@ -5,9 +5,10 @@ Deployment is automated via a deploy script (```deploy.sh```).
 
 ### Prerequisites
 The automated deployment of this application requires several prerequisites to run.
--  Two S3 buckets must be configured:
-    - One must host the configuration files (```config.zip```)
-    - Another must host the ```.war``` file (```itemviewerservice.war```)
+-  S3 buckets must be configured to contain the following files:
+    - Configuration files (```config.zip```)
+    - ItemViewerService ```.war``` file (```itemviewerservice.war```)
+    - Dictionary ```.war``` file (```Dictionary.war```)
     - **The URLs to these S3 buckets must be configured in the deployment script.**
 - An IAM role must be added to allow access to the S3 buckets. The following script is the necessary IAM role policy:
 ```
