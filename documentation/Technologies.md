@@ -77,9 +77,12 @@ If the sums do not match an error will be logged and the file will be redownload
 If the md5 sums still do not match another error is logged and the last download is kept.
 
 #### Zip Archive Extraction
-Java's built in Zip and File libraries are used to extract a zip archive to the local file system.
+Java's built in Zip and File libraries are used to extract a zip archive to the local file system. The directory structure of the zip file is recreated in the local file system, and the files are extracted into the directories.
 
 ## Smarter Balanced Libraries
+
+### Dictionary
+The Smarter Balanced Dictionary is a runtime dependency of the Iris application, and therefore the item viewer service application. It provides an API that is used for the dictionary accommodation. The item viewer service requires that it is configured and running.
 
 ### Iris
 The Smarter Balanced Iris is used as a Maven WAR overlay to extend the scripts, styling and functionality of the Iris application into the item viewer service.
