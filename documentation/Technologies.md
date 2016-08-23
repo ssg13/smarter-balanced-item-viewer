@@ -2,14 +2,7 @@
 
 This document explains the main parts of the item viewer service and, its important dependencies.
 The Item viewer service provides an API to load a single item and accommodations in a page. The item and accommodations are specified as URL parameters.
-The Smarter Balanced Iris is used as a Maven WAR overlay to extend the scripts, styling and functionality of the Iris application into the item viewer service.
-The Iris application displays a window for users with a text box where they can enter a JSON token to load an item and accommodations. The item and accommodations are loaded in an iFrame embedded in the page with the text box.
-The iFrame with the items and accommodations is the front end part of the Iris that the item viewer service makes use of. It loads only the iFrame and selects which item and accommodations are loaded from the URL.
 
-The item viewer service excludes some files from the Iris WAR overlay. It excludes the Iris web.xml file because it requires different servlet mappings. It excludes the JNA 3.0.9 jar because it causes a dependency conflict with the Operating System Hardware Information library which depends on JNA 4.2.2. Finally it excludes the IrisPages directory because it does not need the page templates it contains.
-
-The item viewer service extends the Iris application by adding its own controllers for loading items and accommodations by URL, and the diagnostic API.
-In the backend it adds the diagnostic API logic, accommodation code to type lookup, and a service that fetches content packages from Amazon Web Services S3.
 
 ## Item Viewer Service Modules
 The Item Viewer service is divided into three layers, the App, the Core, and the Data Access Layer or dal.
@@ -85,6 +78,21 @@ If the md5 sums still do not match another error is logged and the last download
 
 #### Zip Archive Extraction
 Java's built in Zip and File libraries are used to extract a zip archive to the local file system.
+
+## Smarter Balanced Libraries
+
+### Iris
+The Smarter Balanced Iris is used as a Maven WAR overlay to extend the scripts, styling and functionality of the Iris application into the item viewer service.
+The Iris application displays a window for users with a text box where they can enter a JSON token to load an item and accommodations. The item and accommodations are loaded in an iFrame embedded in the page with the text box.
+The iFrame with the items and accommodations is the front end part of the Iris that the item viewer service makes use of. It loads only the iFrame and selects which item and accommodations are loaded from the URL.
+
+The item viewer service excludes some files from the Iris WAR overlay. It excludes the Iris web.xml file because it requires different servlet mappings. It excludes the JNA 3.0.9 jar because it causes a dependency conflict with the Operating System Hardware Information library which depends on JNA 4.2.2. Finally it excludes the IrisPages directory because it does not need the page templates it contains.
+
+The item viewer service extends the Iris application by adding its own controllers for loading items and accommodations by URL, and the diagnostic API.
+In the backend it adds the diagnostic API logic, accommodation code to type lookup, and a service that fetches content packages from Amazon Web Services S3.
+
+### Student Library
+The student library is used to
 
 ## Third Party Libraries
 
