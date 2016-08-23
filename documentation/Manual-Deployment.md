@@ -28,56 +28,65 @@ Launch an Amazon Web Services instance with the following configurations:
 
 ### Installation
 In the AWS instance launched, update packages:
-```sudo apt-get update```
+```apt-get update```
 
 - Install openjdk-7:
-```sudo apt-get install openjdk-7-jdk```
+```apt-get install openjdk-7-jdk```
 
 - Install tomcat7 and tomcat7-admin:
-```sudo apt-get install tomcat7 tomcat7-admin```
+```apt-get install tomcat7 tomcat7-admin```
 
 - Install nginx for port forwarding:
-```sudo apt-get install nginx```
+```apt-get install nginx```
 
 ### Tomcat Configuration
 - Create a directory for tomcat give it permissions:
 
-```sudo mkdir -p /home/tomcat7/content```
+```mkdir -p /home/tomcat7/content```
 
-```sudo chown -R tomcat7:tomcat7 /home/tomcat7```
+```chown -R tomcat7:tomcat7 /home/tomcat7```
 
-```sudo chown -R tomcat7:tomcat7 /usr/share/tomcat7```
+```chown -R tomcat7:tomcat7 /usr/share/tomcat7```
 
 - Update the tomcat configuration files:
 
-1. Create the file ```/etc/tomcat7/context.xml``` with the following text:
-
-__TODO__ Put this file somewhere to copy, too long to paste here
-    
-2. Create the file ```/etc/tomcat7/tomcat-users.xml``` with the following text (be sure to add a password):
-
+1. Modify the file ```/etc/tomcat7/context.xml```, adding the following text:
+```xml
+<Parameter name="tds.iris.EncryptionKey" override="false" value="24 characters alphanumeric Encryption key" />
+<Parameter name="tds.dictionary.key.TDS_Dict_Collegiate" override="false" value="---Key for Merriam-Webster Dictionary ---"/>
+<Parameter name="tds.dictionary.url.TDS_Dict_Collegiate" override="false" value="http://www.dictionaryapi.com/api/v1/references/collegiate/xml/"/>
+<Parameter name="tds.dictionary.key.TDS_Dict_Learners" override="false" value="---Key for Dictionary ---"/>
+<Parameter name="tds.dictionary.url.TDS_Dict_Learners" override="false" value="http://www.dictionaryapi.com/api/v1/references/learners/xml/"/>
+<Parameter name="tds.dictionary.key.TDS_Dict_SD2" override="false" value="---Key for Dictionary ---"/>
+<Parameter name="tds.dictionary.url.TDS_Dict_SD2" override="false" value="http://www.dictionaryapi.com/api/v1/references/sd2/xml/"/>
+<Parameter name="tds.dictionary.key.TDS_Dict_SD3" override="false" value="---Key for Dictionary ---"/>
+<Parameter name="tds.dictionary.url.TDS_Dict_SD3" override="false" value="http://www.dictionaryapi.com/api/v1/references/sd3/xml/"/>
+<Parameter name="tds.dictionary.key.TDS_Dict_SD4" override="false" value="---Key for Dictionary ---"/>
+<Parameter name="tds.dictionary.url.TDS_Dict_SD4" override="false" value="http://www.dictionaryapi.com/api/v1/references/sd4/xml/"/>
+<Parameter name="tds.dictionary.key.thesaurus" override="false" value="---Key for Dictionary ---"/>
+<Parameter name="tds.dictionary.url.thesaurus" override="false" value="http://www.dictionaryapi.com/api/v1/references/ithesaurus/xml/"/>
+<Parameter name="tds.dictionary.key.spanish" override="false" value="---Key for Dictionary ---"/>
+<Parameter name="tds.dictionary.url.spanish" override="false" value="http://www.dictionaryapi.com/api/v1/references/spanish/xml/"/>
 ```
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. -->
--<tomcat-users version="1.0" xsi:schemaLocation="http://tomcat.apache.org/xml tomcat-users.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://tomcat.apache.org/xml">
-<role rolename="manager"/>
-<role rolename="admin"/>
-<role rolename="manager-gui"/>
-<role rolename="manager-script"/?
-<user roles="admin,manager,manager-gui,manager-script" password="" username="admin"/>
-</tomcat-users>
+
+2. Modify the file ```/etc/tomcat7/web.xml```, adding the following text":
+```xml
+<filter>
+  <filter-name>CorsFilter</filter-name>
+  <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>
+</filter>
+<filter-mapping>
+  <filter-name>CorsFilter</filter-name>
+  <url-pattern>/*</url-pattern>
+</filter-mapping>
 ```
-
-3. Create the file ```/etc/tomcat7/web.xml``` with the following text":
-
-__TODO__ Put this file somewhere to copy, too long to paste here
 
 ### Deploying the ```.war``` file
 - Remove the tomcat ROOT file, copy ```itemviewerservice.war``` file to tomcat's webapps directory:
 
-```sudo rm -rf /var/lib/tomcat7/webapps/ROOT```
+```rm -rf /var/lib/tomcat7/webapps/ROOT```
 
-```sudo mv -f itemviewerservice.war /var/lib/tomcat7/webapps/ROOT.war```
+```mv -f itemviewerservice.war /var/lib/tomcat7/webapps/ROOT.war```
 
 
 ### Configure nginx
