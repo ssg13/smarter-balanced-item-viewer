@@ -50,7 +50,7 @@ In the AWS instance launched, update packages:
 
 - Update the tomcat configuration files:
 
-1. Modify the file ```/etc/tomcat7/context.xml```, adding the following text:
+Modify the file ```/etc/tomcat7/context.xml```, adding the following text:
 ```xml
 <Parameter name="tds.iris.EncryptionKey" override="false" value="24 characters alphanumeric Encryption key" />
 <Parameter name="tds.dictionary.key.TDS_Dict_Collegiate" override="false" value="---Key for Merriam-Webster Dictionary ---"/>
@@ -69,7 +69,7 @@ In the AWS instance launched, update packages:
 <Parameter name="tds.dictionary.url.spanish" override="false" value="http://www.dictionaryapi.com/api/v1/references/spanish/xml/"/>
 ```
 
-2. Modify the file ```/etc/tomcat7/web.xml```, adding the following text":
+Modify the file ```/etc/tomcat7/web.xml```, adding the following text:
 ```xml
 <filter>
   <filter-name>CorsFilter</filter-name>
