@@ -61,11 +61,11 @@ public final class AccommodationTypeLookup {
     accommodationMap.put("TDS_PM1", "Permissive Mode");
 
     //Print Size
-    accommodationMap.put("TDS_PS_L0", "PrintSize");
-    accommodationMap.put("TDS_PS_L1", "PrintSize");
-    accommodationMap.put("TDS_PS_L2", "PrintSize");
-    accommodationMap.put("TDS_PS_L3", "PrintSize");
-    accommodationMap.put("TDS_PS_L4", "PrintSize");
+    accommodationMap.put("TDS_PS_L0", "Print Size");
+    accommodationMap.put("TDS_PS_L1", "Print Size");
+    accommodationMap.put("TDS_PS_L2", "Print Size");
+    accommodationMap.put("TDS_PS_L3", "Print Size");
+    accommodationMap.put("TDS_PS_L4", "Print Size");
 
     //Streamlined Interface
     accommodationMap.put("TDS_SLM1", "Streamlined Mode");
