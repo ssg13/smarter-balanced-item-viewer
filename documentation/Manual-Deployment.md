@@ -24,7 +24,7 @@ Launch an Amazon Web Services instance with the following configurations:
 
 1. Use AMI: Ubuntu Server 14.04 LTS (HVM), SSD Volume Type (ami-d732f0b7).
 2. Select a suitable instance size.
-3. Select `Next: COnfigure Instance Details`
+3. Select `Next: Configure Instance Details`
 4. Add the IAM role that grants S3 bucket access
 5. Select ```Review and Launch```.
 6. Next to ```Security Groups```, select ```Edit Security Groups``` and add the security group created in the __Prerequisites__ section.
