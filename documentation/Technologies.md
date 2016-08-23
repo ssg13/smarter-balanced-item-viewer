@@ -95,7 +95,7 @@ The item viewer service extends the Iris application by adding its own controlle
 In the backend it adds the diagnostic API logic, accommodation code to type lookup, and a service that fetches content packages from Amazon Web Services S3.
 
 ### Student Library
-The student library is used to
+The Student Library is used to access the content abstractions that Iris uses. The content abstractions are used to validate content requests.
 
 ## Third Party Libraries
 
