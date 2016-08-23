@@ -1,4 +1,4 @@
-# Item Viewer Service Overview
+# Item Viewer Service Technologies Overview
 
 This document explains the main parts of the item viewer service and, its important dependencies.
 
@@ -29,7 +29,7 @@ This document explains the main parts of the item viewer service and, its import
     * [Spring](#spring)
 
 
-## Item Viewer Service Overview
+## Item Viewer Service Modules
 The item viewer service provides an API to load a single content item and accommodations in a page. The item and accommodations are specified as URL parameters.
 The item viewer service is divided into three layers, the App, the Core, and the Data Access Layer or dal.
 Each layer is a Maven submodule that is part of the main item viewer service Maven application.
