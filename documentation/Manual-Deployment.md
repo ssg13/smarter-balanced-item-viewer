@@ -10,21 +10,25 @@ This project is hosted on Amazon Web Services EC2 using Ubuntu 14.04.
 | Type | Protocol | Port Range | Source |
 | --- | --- | --- | --- |
 |HTTP | TCP | 80 | 0.0.0.0/0 |
-| SSH | TCP | 22 | 0.0.0.0/0 | 
+| SSH | TCP | 22 | 0.0.0.0/0 |
 
 #### Outbound
 | Type | Protocol | Port Range | Source |
 | --- | --- | --- | --- |    
-| All Traffic | All | All | 0.0.0.0/0 | 
+| All Traffic | All | All | 0.0.0.0/0 |
+
+- Create an IAM role that grants access to the S3 bucket containing the content packages
 
 ### AWS Setup
 Launch an Amazon Web Services instance with the following configurations:
 
 1. Use AMI: Ubuntu Server 14.04 LTS (HVM), SSD Volume Type (ami-d732f0b7).
 2. Select a suitable instance size.
-6. Select ```Review and Launch```.
-7. Next to ```Security Groups```, select ```Edit Security Groups``` and add the security group created in the __Prerequisites__ section.
-8. Launch your instance.
+3. Select `Next: COnfigure Instance Details`
+4. Add the IAM role that grants S3 bucket access
+5. Select ```Review and Launch```.
+6. Next to ```Security Groups```, select ```Edit Security Groups``` and add the security group created in the __Prerequisites__ section.
+7. Launch your instance.
 
 ### Installation
 In the AWS instance launched, update packages:
@@ -81,12 +85,15 @@ In the AWS instance launched, update packages:
 </filter-mapping>
 ```
 
-### Deploying the ```.war``` file
-- Remove the tomcat ROOT file, copy ```itemviewerservice.war``` file to tomcat's webapps directory:
+### Deploying the ```.war``` files
+- Remove the tomcat ROOT file, move ```itemviewerservice.war``` file to tomcat's webapps directory
+- Move the `Dictionary.war` file to tomcat's webapps directory
 
 ```rm -rf /var/lib/tomcat7/webapps/ROOT```
 
 ```mv -f itemviewerservice.war /var/lib/tomcat7/webapps/ROOT.war```
+
+`mv -f Dictionary.war /var/lib/tomcat7/webapps/Dictionary.war`
 
 
 ### Configure nginx
