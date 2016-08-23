@@ -1,11 +1,37 @@
-# Item Viewer Service
+# Item Viewer Service Overview
 
 This document explains the main parts of the item viewer service and, its important dependencies.
-The Item viewer service provides an API to load a single item and accommodations in a page. The item and accommodations are specified as URL parameters.
+
+#### Table of Contents
+  * [Item Viewer Service Overview](#item-viewer-service-overview)
+    * [App](#app)
+      * [Spring](#spring)
+      * [JavaScript](#javascript)
+      * [Configuration](#configuration)
+    * [Core](#core)
+      * [Diagnostic API](#diagnostic-api)
+      * [Item Request Translation](#item-request-translation)
+      * [S3 Content Package Update Checker](#s3-content-package-update-checker)
+    * [Data Access Layer](#data-access-layer)
+      * [Amazon File API](#amazon-file-api)
+      * [Zip Archive Extraction](#zip-archive-extraction)
+  * [Smarter Balanced Libraries](#smarter-balanced-libraries)
+    * [Dictionary](#dictionary)
+    * [Iris](#iris)
+    * [Student Library](#student-library)
+  * [Third Party Libraries](#third-party-libraries)
+    * [Amazon Web Services Java SDK](#amazon-web-services-java-sdk)
+    * [Apache Commons](#apache-commons)
+    * [Logback Classic](#logback-classic)
+    * [Jackson Databind](#jackson-databind)
+    * [Operating System Hardware Information](#operating-system-hardware-information)
+    * [SLF4J](#slf4j)
+    * [Spring](#spring)
 
 
-## Item Viewer Service Modules
-The Item Viewer service is divided into three layers, the App, the Core, and the Data Access Layer or dal.
+## Item Viewer Service Overview
+The item viewer service provides an API to load a single content item and accommodations in a page. The item and accommodations are specified as URL parameters.
+The item viewer service is divided into three layers, the App, the Core, and the Data Access Layer or dal.
 Each layer is a Maven submodule that is part of the main item viewer service Maven application.
 
 ### App
