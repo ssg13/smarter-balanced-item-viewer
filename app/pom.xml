@@ -104,7 +104,7 @@
         <dependency>
             <groupId>org.opentestsystem.delivery</groupId>
             <artifactId>student.library</artifactId>
-            <version>0.0.1</version>
+            <version>1.0.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -116,7 +116,7 @@
         <dependency>
             <groupId>org.opentestsystem.delivery</groupId>
             <artifactId>iris</artifactId>
-            <version>0.0.1</version>
+            <version>1.0.2</version>
             <type>war</type>
         </dependency>
     </dependencies>
