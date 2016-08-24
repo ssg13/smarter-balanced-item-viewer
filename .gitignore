@@ -1,25 +1,22 @@
-# Maven
-target/
-*.ser
-*.ec
-overlays/
-
-# IntelliJ Idea
-.idea/
-out/
-*.ipr
-*.iws
-*.iml
-
-# Eclipse
-.classpath
-.project
-.settings/
-.metadata/
-
-# OSX
-.DS_Store
-
-#Log files
-*.log
-*log.lck
+# Ignore Play! working directory #
+bin/
+/db
+.eclipse
+/lib/
+/logs/
+/modules
+/project/target
+/target
+tmp/
+test-result
+server.pid
+*.eml
+/dist/
+.cache
+#Ignore user specific Intellij files
+*/.idea/workspace.xml
+*/.idea/tasks.xml
+.idea/workspace.xml
+.idea/tasks.xml
+#Ignore Maven target
+*/target/*

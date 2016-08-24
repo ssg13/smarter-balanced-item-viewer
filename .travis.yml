@@ -1,6 +1,0 @@
-language: java
-jdk:
-- oraclejdk7
-script:
-- mvn checkstyle:check
-- mvn clean install
