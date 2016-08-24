@@ -12,10 +12,6 @@ Smarter Balanced Item Viewer Service
 5. Push to the branch: `git push origin my-new-feature`
 6. Submit a pull request :smile:
 
-## Architecture
-Each node maintains an independant Redis cache of assessment items, which mirrors a central Amazon S3 bucket.
-[More info](https://github.com/osu-cass/smarter-balanced-item-viewer/wiki/Architecture)
-
 ## Installation
 1. Clone the repo: `git clone https://github.com/osu-cass/smarter-balanced-item-viewer.git`
 2. Navigate into the directory and build: `cd smarter-balanced-item-viewer && mvn clean install`

@@ -1,33 +1,6 @@
 language: java
-services:
-- redis-server
 jdk:
 - oraclejdk7
 script:
 - mvn checkstyle:check
 - mvn clean install
-deploy:
-- provider: s3
-  access_key_id: AKIAJ3NBBITOO7JVCYCA
-  secret_access_key: &1
-    secure: frAOpcZEATcScpOifVclPEPW9ej+GQE9bUtiOeqzQOGNcJzqNJC9dVzUxwgx60A8/hG7YPOh6Owz02rUrVddcaM7nEv8WP74BTbbNOU9ZIX88ULjkAuzxqWAPeSyYfSNf4kahDpM+VMJHEp/1nk3fKhyBWnvWEQo07S6XeXjAARry3Gy9r9C+2PbpTLQQfSaRft7o/LPPCN8JPpJ+lMs2oIN889ApaOR1O+0k1OG9eVgVoe+qz/4ZuhNRosaojtu+PV51bQw6hqPtDwhLWzTDKq3FyuPzd74sjBYFeM9q5/Vs4oWSg6H5K8o4dVNIJAYSOLSpbfA6urrHYg+SnKs1b1UnIGtpU+4+n+1odaHpwjbp0i5yks6i0OPuGntdDkMQOCIESundWOY4Kvt70CmxyWX0VsnAv6ZMzgqkU2CDIQZHqKmOev2wGsjUzj8LCRn85bfSRwC4EMs0dl5Dh/61QHuh+mWLgmUgYu5/GWHZIZLSSREWXG/PlLIOOOVfGyY6IerBNE0Qs9xRhgMzLePhMcCf+clQ7MXCxskdxr1hyEg9TncoWs1yI6tlOfKg8114YDSzL0WVVj8XSg7bOX99nBLPvYt6V6+2mM9g7e/VBgii4mbkx0dw6xp7NM3sZgCI5dVwkxbl8/e7MVtk8PXO4jKKAV5i8lXnHc1c8AcFgE=
-  local_dir: dpl_cd_upload
-  skip_cleanup: true
-  on: &2
-    repo: osu-cass/smarter-balanced-item-viewer
-    branch: dev
-  bucket: cass-sb-codedeploy
-- provider: codedeploy
-  access_key_id: AKIAJ3NBBITOO7JVCYCA
-  secret_access_key: *1
-  bucket: cass-sb-codedeploy
-  key: latest.zip
-  bundle_type: zip
-  application: smarter-balanced-item-viewer
-  deployment_group: test-deployment
-  region: us-west-2
-  on: *2
-before_deploy:
-- zip -r latest *
-- mkdir -p dpl_cd_upload
-- mv latest.zip dpl_cd_upload/latest.zip
