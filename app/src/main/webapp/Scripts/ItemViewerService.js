@@ -9,6 +9,7 @@
     //Adding this onto TDS for now so it is available in the dictionary handler.
     var irisUrl = location.href;
     var buttonsLoaded = false;
+    CM.accessibilityEnabled = true;
     // Functions that are used by toolbar buttons
 
     //Calculator
@@ -136,13 +137,12 @@
                 window.WordListPanel.clearCache();
             }
         }
-        CM.accessibilityEnabled = true;
+
         page = CM.createPage(content);
 
         page.render();
         page.once('loaded', function () {
             TDS.Dialog.hideProgress();
-
             page.show();
             CM.accessibilityEnabled = false;
             deferred.resolve();
@@ -188,7 +188,7 @@
     }
 
     function loadToken(vendorId, token) {
-        Messages.set('TDS.WordList.illustration', 'Illustration Glossary', 'ENU');
+        Messages.set('TDS.WordList.illustration', 'Illustration', 'ENU');
         TDS.Dialog.showProgress();
         var url = irisUrl + '/Pages/API/content/load?id=' + vendorId;
         setAccommodations(token);
