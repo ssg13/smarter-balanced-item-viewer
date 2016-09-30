@@ -172,17 +172,6 @@ public class S3UpdateChecker {
       HttpClient client = HttpClientBuilder.create().build();
       HttpGet request = new HttpGet(url);
       request.addHeader("User-Agent", USER_AGENT);
-      try {
-        HttpResponse response = client.execute(request);
-        Integer statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode != 200) {
-          logger.error("Iris content reload request returned a non 200 status code: "
-                  + statusCode.toString());
-        }
-      } catch (IOException e) {
-        logger.error("Unable to make http request to reload Iris content.", e);
-      }
-
     }
 
     logger.info("Finished running scheduled check for new or updated S3 items.");
